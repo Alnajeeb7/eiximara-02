@@ -56,6 +56,54 @@ function initNavigation() {
   if (!nav) return;
   
   let isMobileOpen = false;
+  let lastScrollY = 0;
+  let scrollDirection = 'up';
+  let ticking = false;
+  
+  // Scroll-based dynamic island effect
+  function handleScroll() {
+    const currentScrollY = window.scrollY;
+    const scrollDelta = currentScrollY - lastScrollY;
+    
+    // Determine scroll direction
+    if (scrollDelta > 0) {
+      scrollDirection = 'down';
+    } else if (scrollDelta < 0) {
+      scrollDirection = 'up';
+    }
+    
+    // Apply states based on scroll position and direction
+    if (currentScrollY < 50) {
+      // At top - fully expanded
+      nav.classList.remove('nav--contracted', 'nav--hidden', 'nav--expanded');
+    } else if (currentScrollY > 300 && scrollDirection === 'down') {
+      // Scrolling down far - hide
+      nav.classList.add('nav--hidden');
+      nav.classList.remove('nav--contracted', 'nav--expanded');
+    } else if (scrollDirection === 'up') {
+      // Scrolling up - show expanded
+      nav.classList.remove('nav--hidden');
+      nav.classList.add('nav--expanded');
+      nav.classList.remove('nav--contracted');
+    } else if (currentScrollY > 50) {
+      // Scrolled but not far - contracted
+      nav.classList.add('nav--contracted');
+      nav.classList.remove('nav--hidden', 'nav--expanded');
+    }
+    
+    lastScrollY = currentScrollY;
+    ticking = false;
+  }
+  
+  window.addEventListener('scroll', function() {
+    if (!ticking) {
+      requestAnimationFrame(handleScroll);
+      ticking = true;
+    }
+  }, { passive: true });
+  
+  // Initial state
+  handleScroll();
   
   // Mobile menu toggle
   if (navToggle && navMobile) {
