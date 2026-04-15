@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="EIXIMARA Admin Panel - Manage projects and payments.">
+  <meta name="theme-color" content="#F2FAF6">
+  <title>Admin Panel - EIXIMARA</title>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Styles -->
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="admin">
+    <!-- Sidebar -->
+    <aside class="dashboard__sidebar admin__sidebar">
+      <div class="dashboard__sidebar-header">
+        <a href="index.html" class="nav__logo text-gradient font-display">EIXIMARA</a>
+        <span class="admin__badge">Admin</span>
+      </div>
+      
+      <nav class="dashboard__nav">
+        <a href="#projects" class="dashboard__nav-item dashboard__nav-item--active" data-section="projects">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+          </svg>
+          <span>Projects</span>
+        </a>
+        <a href="#payments" class="dashboard__nav-item" data-section="payments">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/>
+          </svg>
+          <span>Payments</span>
+          <span class="dashboard__nav-badge" id="pending-payments">1</span>
+        </a>
+        <a href="#messages" class="dashboard__nav-item" data-section="messages">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/>
+          </svg>
+          <span>Send Message</span>
+        </a>
+        <a href="#delivery" class="dashboard__nav-item" data-section="delivery">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
+          </svg>
+          <span>Deliver Project</span>
+        </a>
+      </nav>
+      
+      <div class="dashboard__sidebar-footer">
+        <a href="index.html" class="btn btn--ghost btn--sm">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+          </svg>
+          Back to Site
+        </a>
+      </div>
+    </aside>
+
+    <!-- Mobile Header -->
+    <header class="dashboard__mobile-header">
+      <a href="index.html" class="nav__logo text-gradient font-display">EIXIMARA</a>
+      <div class="admin__mobile-badge">Admin</div>
+      <button type="button" class="dashboard__menu-toggle" id="menu-toggle" aria-label="Toggle menu">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="24" height="24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+        </svg>
+      </button>
+    </header>
+
+    <!-- Main Content -->
+    <main class="dashboard__main admin__main">
+      <!-- Projects Section -->
+      <section id="projects" class="dashboard__section dashboard__section--active">
+        <div class="dashboard__section-header">
+          <h1 class="dashboard__section-title font-display">All Projects</h1>
+          <p class="dashboard__section-subtitle">Manage and update project status</p>
+        </div>
+
+        <div class="admin__projects" id="projects-list">
+          <!-- Projects will be populated by JS -->
+        </div>
+      </section>
+
+      <!-- Payments Section -->
+      <section id="payments" class="dashboard__section">
+        <div class="dashboard__section-header">
+          <h1 class="dashboard__section-title font-display">Payment Verification</h1>
+          <p class="dashboard__section-subtitle">Review and verify user payments</p>
+        </div>
+
+        <div class="admin__payments" id="payments-list">
+          <!-- Payments will be populated by JS -->
+        </div>
+      </section>
+
+      <!-- Send Message Section -->
+      <section id="messages" class="dashboard__section">
+        <div class="dashboard__section-header">
+          <h1 class="dashboard__section-title font-display">Send Message</h1>
+          <p class="dashboard__section-subtitle">Send updates to users about their projects</p>
+        </div>
+
+        <div class="admin__message-form card">
+          <form id="message-form">
+            <div class="admin__field">
+              <label for="message-project" class="label">Select Project</label>
+              <select id="message-project" class="input input--lg" required>
+                <option value="">Choose a project...</option>
+              </select>
+            </div>
+            
+            <div class="admin__field">
+              <label for="message-content" class="label">Message</label>
+              <textarea id="message-content" class="textarea" placeholder="Type your message to the user..." required></textarea>
+            </div>
+
+            <button type="submit" class="btn btn--primary btn--lg hover-glow">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
+              </svg>
+              Send Message
+            </button>
+          </form>
+        </div>
+      </section>
+
+      <!-- Deliver Project Section -->
+      <section id="delivery" class="dashboard__section">
+        <div class="dashboard__section-header">
+          <h1 class="dashboard__section-title font-display">Deliver Project</h1>
+          <p class="dashboard__section-subtitle">Provide project URL and transfer GitHub repository</p>
+        </div>
+
+        <div class="admin__delivery-form card">
+          <form id="delivery-form">
+            <div class="admin__field">
+              <label for="delivery-project" class="label">Select Project</label>
+              <select id="delivery-project" class="input input--lg" required>
+                <option value="">Choose a project...</option>
+              </select>
+            </div>
+            
+            <div class="admin__field">
+              <label for="project-url" class="label">Live Project URL</label>
+              <input type="url" id="project-url" class="input input--lg" placeholder="https://example.com" required>
+              <p class="admin__field-hint">The URL where the user can view their live website</p>
+            </div>
+
+            <div class="admin__field">
+              <label for="github-url" class="label">GitHub Repository URL</label>
+              <input type="url" id="github-url" class="input input--lg" placeholder="https://github.com/username/repo" required>
+              <p class="admin__field-hint">The repository will be transferred to the user</p>
+            </div>
+
+            <div class="admin__actions">
+              <button type="submit" class="btn btn--primary btn--lg hover-glow">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
+                </svg>
+                Deliver Project
+              </button>
+              
+              <button type="button" class="btn btn--outline btn--lg" id="transfer-repo-btn">
+                <svg fill="currentColor" viewBox="0 0 24 24" width="20" height="20">
+                  <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                </svg>
+                Transfer GitHub Repo
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Transfer Status -->
+        <div class="admin__transfer-status card" id="transfer-status" style="display: none;">
+          <div class="admin__transfer-icon">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+          </div>
+          <h3 class="admin__transfer-title font-display">Repository Transferred</h3>
+          <p class="admin__transfer-text">The GitHub repository has been successfully transferred to the user.</p>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Admin Script -->
+  <script src="main.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      'use strict';
+      
+      // Demo: Initialize admin data
+      let adminData = JSON.parse(localStorage.getItem('eiximara_admin') || 'null');
+      if (!adminData) {
+        adminData = {
+          projects: [
+            {
+              id: 'PROJ-1',
+              userId: 'user-1',
+              userName: 'Demo User',
+              userEmail: 'demo@example.com',
+              type: 'Portfolio Website',
+              budget: '$1,500',
+              timeline: 'Standard (2 weeks)',
+              status: 'in_progress',
+              progress: 50,
+              startDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+              paymentStatus: 'pending',
+              paymentUrl: null,
+              projectUrl: null,
+              githubUrl: null
+            }
+          ]
+        };
+        localStorage.setItem('eiximara_admin', JSON.stringify(adminData));
+      }
+      
+      // Sync with user project if exists
+      const userProject = JSON.parse(localStorage.getItem('eiximara_project') || 'null');
+      if (userProject) {
+        const existingIndex = adminData.projects.findIndex(p => p.id === userProject.id);
+        if (existingIndex >= 0) {
+          adminData.projects[existingIndex] = { ...adminData.projects[existingIndex], ...userProject };
+        } else {
+          const user = JSON.parse(localStorage.getItem('eiximara_user') || '{}');
+          adminData.projects.push({
+            ...userProject,
+            userId: 'user-' + Date.now(),
+            userName: user.name || 'User',
+            userEmail: user.email || 'user@example.com'
+          });
+        }
+        localStorage.setItem('eiximara_admin', JSON.stringify(adminData));
+      }
+      
+      // DOM Elements
+      const sidebar = document.querySelector('.dashboard__sidebar');
+      const menuToggle = document.getElementById('menu-toggle');
+      const navItems = document.querySelectorAll('.dashboard__nav-item');
+      const sections = document.querySelectorAll('.dashboard__section');
+      const messageForm = document.getElementById('message-form');
+      const deliveryForm = document.getElementById('delivery-form');
+      const transferRepoBtn = document.getElementById('transfer-repo-btn');
+      
+      // Initialize UI
+      updateProjectsList();
+      updatePaymentsList();
+      populateProjectSelects();
+      
+      function updateProjectsList() {
+        const projectsList = document.getElementById('projects-list');
+        
+        projectsList.innerHTML = adminData.projects.map(function(project) {
+          const statusOptions = [
+            { value: 'pending', label: 'Pending' },
+            { value: 'in_progress', label: 'In Progress' },
+            { value: 'review', label: 'Under Review' },
+            { value: 'completed', label: 'Completed' }
+          ];
+          
+          return '<div class="admin__project-card card">' +
+            '<div class="admin__project-header">' +
+              '<div class="admin__project-info">' +
+                '<h3 class="admin__project-title font-display">' + project.type + '</h3>' +
+                '<p class="admin__project-id font-mono">' + project.id + '</p>' +
+              '</div>' +
+              '<span class="admin__project-badge admin__project-badge--' + project.status + '">' + 
+                statusOptions.find(s => s.value === project.status).label + 
+              '</span>' +
+            '</div>' +
+            '<div class="admin__project-details">' +
+              '<div class="admin__project-detail">' +
+                '<span class="admin__project-label">Client</span>' +
+                '<span class="admin__project-value">' + project.userName + '</span>' +
+              '</div>' +
+              '<div class="admin__project-detail">' +
+                '<span class="admin__project-label">Email</span>' +
+                '<span class="admin__project-value">' + project.userEmail + '</span>' +
+              '</div>' +
+              '<div class="admin__project-detail">' +
+                '<span class="admin__project-label">Budget</span>' +
+                '<span class="admin__project-value">' + project.budget + '</span>' +
+              '</div>' +
+              '<div class="admin__project-detail">' +
+                '<span class="admin__project-label">Payment</span>' +
+                '<span class="admin__project-value admin__project-value--' + project.paymentStatus + '">' + 
+                  project.paymentStatus.charAt(0).toUpperCase() + project.paymentStatus.slice(1) + 
+                '</span>' +
+              '</div>' +
+            '</div>' +
+            '<div class="admin__project-actions">' +
+              '<div class="admin__field admin__field--inline">' +
+                '<label class="label">Status</label>' +
+                '<select class="input" data-project-id="' + project.id + '" data-action="status">' +
+                  statusOptions.map(function(opt) {
+                    return '<option value="' + opt.value + '"' + (opt.value === project.status ? ' selected' : '') + '>' + opt.label + '</option>';
+                  }).join('') +
+                '</select>' +
+              '</div>' +
+              '<div class="admin__field admin__field--inline">' +
+                '<label class="label">Progress</label>' +
+                '<input type="number" class="input" min="0" max="100" value="' + project.progress + '" ' +
+                       'data-project-id="' + project.id + '" data-action="progress">' +
+              '</div>' +
+              '<button type="button" class="btn btn--primary btn--sm" data-project-id="' + project.id + '" data-action="update">' +
+                'Update' +
+              '</button>' +
+            '</div>' +
+          '</div>';
+        }).join('');
+        
+        // Attach event listeners
+        document.querySelectorAll('[data-action="update"]').forEach(function(btn) {
+          btn.addEventListener('click', function() {
+            const projectId = this.dataset.projectId;
+            const statusSelect = document.querySelector('[data-project-id="' + projectId + '"][data-action="status"]');
+            const progressInput = document.querySelector('[data-project-id="' + projectId + '"][data-action="progress"]');
+            
+            updateProject(projectId, {
+              status: statusSelect.value,
+              progress: parseInt(progressInput.value, 10)
+            });
+          });
+        });
+      }
+      
+      function updatePaymentsList() {
+        const paymentsList = document.getElementById('payments-list');
+        const pendingBadge = document.getElementById('pending-payments');
+        
+        const projectsWithPayments = adminData.projects.filter(p => p.paymentStatus === 'submitted' || p.paymentUrl);
+        const pendingCount = adminData.projects.filter(p => p.paymentStatus === 'submitted').length;
+        
+        pendingBadge.textContent = pendingCount;
+        pendingBadge.style.display = pendingCount > 0 ? 'flex' : 'none';
+        
+        if (projectsWithPayments.length === 0) {
+          paymentsList.innerHTML = '<div class="admin__empty">' +
+            '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="48" height="48">' +
+              '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>' +
+            '</svg>' +
+            '<p>No pending payments to verify</p>' +
+          '</div>';
+          return;
+        }
+        
+        paymentsList.innerHTML = projectsWithPayments.map(function(project) {
+          return '<div class="admin__payment-card card">' +
+            '<div class="admin__payment-header">' +
+              '<div class="admin__payment-info">' +
+                '<h3 class="admin__payment-title font-display">' + project.userName + '</h3>' +
+                '<p class="admin__payment-id font-mono">' + project.id + '</p>' +
+              '</div>' +
+              '<span class="admin__payment-badge admin__payment-badge--' + project.paymentStatus + '">' + 
+                (project.paymentStatus === 'submitted' ? 'Pending Verification' : 'Verified') + 
+              '</span>' +
+            '</div>' +
+            '<div class="admin__payment-details">' +
+              '<div class="admin__payment-detail">' +
+                '<span class="admin__payment-label">Amount</span>' +
+                '<span class="admin__payment-value text-gradient">' + project.budget + '</span>' +
+              '</div>' +
+              '<div class="admin__payment-detail">' +
+                '<span class="admin__payment-label">Payment URL/ID</span>' +
+                '<a href="' + (project.paymentUrl || '#') + '" target="_blank" class="admin__payment-link">' + 
+                  (project.paymentUrl || 'Not provided') + 
+                '</a>' +
+              '</div>' +
+            '</div>' +
+            (project.paymentStatus === 'submitted' ? 
+              '<div class="admin__payment-actions">' +
+                '<button type="button" class="btn btn--primary btn--sm hover-glow" data-project-id="' + project.id + '" data-action="verify">' +
+                  '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16">' +
+                    '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>' +
+                  '</svg>' +
+                  'Verify Payment' +
+                '</button>' +
+                '<button type="button" class="btn btn--outline btn--sm" data-project-id="' + project.id + '" data-action="reject">' +
+                  'Reject' +
+                '</button>' +
+              '</div>' : '') +
+          '</div>';
+        }).join('');
+        
+        // Attach event listeners
+        document.querySelectorAll('[data-action="verify"]').forEach(function(btn) {
+          btn.addEventListener('click', function() {
+            verifyPayment(this.dataset.projectId);
+          });
+        });
+        
+        document.querySelectorAll('[data-action="reject"]').forEach(function(btn) {
+          btn.addEventListener('click', function() {
+            rejectPayment(this.dataset.projectId);
+          });
+        });
+      }
+      
+      function populateProjectSelects() {
+        const messageSelect = document.getElementById('message-project');
+        const deliverySelect = document.getElementById('delivery-project');
+        
+        const options = adminData.projects.map(function(project) {
+          return '<option value="' + project.id + '">' + project.userName + ' - ' + project.type + ' (' + project.id + ')</option>';
+        }).join('');
+        
+        messageSelect.innerHTML = '<option value="">Choose a project...</option>' + options;
+        deliverySelect.innerHTML = '<option value="">Choose a project...</option>' + options;
+      }
+      
+      function updateProject(projectId, updates) {
+        const index = adminData.projects.findIndex(p => p.id === projectId);
+        if (index >= 0) {
+          adminData.projects[index] = { ...adminData.projects[index], ...updates };
+          localStorage.setItem('eiximara_admin', JSON.stringify(adminData));
+          
+          // Sync with user project
+          syncUserProject(projectId);
+          
+          updateProjectsList();
+          alert('Project updated successfully!');
+        }
+      }
+      
+      function verifyPayment(projectId) {
+        const index = adminData.projects.findIndex(p => p.id === projectId);
+        if (index >= 0) {
+          adminData.projects[index].paymentStatus = 'verified';
+          localStorage.setItem('eiximara_admin', JSON.stringify(adminData));
+          
+          // Sync with user project
+          syncUserProject(projectId);
+          
+          updatePaymentsList();
+          alert('Payment verified successfully!');
+        }
+      }
+      
+      function rejectPayment(projectId) {
+        const index = adminData.projects.findIndex(p => p.id === projectId);
+        if (index >= 0) {
+          adminData.projects[index].paymentStatus = 'pending';
+          adminData.projects[index].paymentUrl = null;
+          localStorage.setItem('eiximara_admin', JSON.stringify(adminData));
+          
+          // Sync with user project
+          syncUserProject(projectId);
+          
+          updatePaymentsList();
+          alert('Payment rejected. User will need to submit again.');
+        }
+      }
+      
+      function syncUserProject(projectId) {
+        const project = adminData.projects.find(p => p.id === projectId);
+        if (project) {
+          const userProject = JSON.parse(localStorage.getItem('eiximara_project') || '{}');
+          if (userProject.id === projectId) {
+            const updatedUserProject = { ...userProject, ...project };
+            localStorage.setItem('eiximara_project', JSON.stringify(updatedUserProject));
+          }
+        }
+      }
+      
+      // Mobile menu toggle
+      if (menuToggle) {
+        menuToggle.addEventListener('click', function() {
+          sidebar.classList.toggle('dashboard__sidebar--open');
+        });
+      }
+      
+      // Navigation
+      navItems.forEach(function(item) {
+        item.addEventListener('click', function(e) {
+          e.preventDefault();
+          const sectionId = this.dataset.section;
+          
+          navItems.forEach(function(nav) {
+            nav.classList.remove('dashboard__nav-item--active');
+          });
+          this.classList.add('dashboard__nav-item--active');
+          
+          sections.forEach(function(section) {
+            section.classList.remove('dashboard__section--active');
+            if (section.id === sectionId) {
+              section.classList.add('dashboard__section--active');
+            }
+          });
+          
+          sidebar.classList.remove('dashboard__sidebar--open');
+        });
+      });
+      
+      // Message form
+      if (messageForm) {
+        messageForm.addEventListener('submit', function(e) {
+          e.preventDefault();
+          
+          const projectId = document.getElementById('message-project').value;
+          const content = document.getElementById('message-content').value;
+          
+          if (!projectId || !content) {
+            alert('Please select a project and enter a message');
+            return;
+          }
+          
+          // Add message to user project
+          const userProject = JSON.parse(localStorage.getItem('eiximara_project') || '{}');
+          if (!userProject.messages) userProject.messages = [];
+          
+          userProject.messages.push({
+            id: Date.now(),
+            from: 'EIXIMARA Team',
+            avatar: 'E',
+            content: content,
+            timestamp: new Date().toISOString(),
+            read: false
+          });
+          
+          localStorage.setItem('eiximara_project', JSON.stringify(userProject));
+          
+          // Reset form
+          document.getElementById('message-content').value = '';
+          
+          alert('Message sent successfully!');
+        });
+      }
+      
+      // Delivery form
+      if (deliveryForm) {
+        deliveryForm.addEventListener('submit', function(e) {
+          e.preventDefault();
+          
+          const projectId = document.getElementById('delivery-project').value;
+          const projectUrl = document.getElementById('project-url').value;
+          const githubUrl = document.getElementById('github-url').value;
+          
+          if (!projectId || !projectUrl || !githubUrl) {
+            alert('Please fill in all fields');
+            return;
+          }
+          
+          // Update admin data
+          const index = adminData.projects.findIndex(p => p.id === projectId);
+          if (index >= 0) {
+            adminData.projects[index].projectUrl = projectUrl;
+            adminData.projects[index].githubUrl = githubUrl;
+            adminData.projects[index].status = 'completed';
+            adminData.projects[index].progress = 100;
+            localStorage.setItem('eiximara_admin', JSON.stringify(adminData));
+            
+            // Sync with user project
+            const userProject = JSON.parse(localStorage.getItem('eiximara_project') || '{}');
+            userProject.projectUrl = projectUrl;
+            userProject.githubUrl = githubUrl;
+            userProject.status = 'completed';
+            userProject.progress = 100;
+            
+            // Add delivery message
+            if (!userProject.messages) userProject.messages = [];
+            userProject.messages.push({
+              id: Date.now(),
+              from: 'EIXIMARA Team',
+              avatar: 'E',
+              content: 'Great news! Your project is complete and has been delivered. You can now access your live website and GitHub repository from the Payment section.',
+              timestamp: new Date().toISOString(),
+              read: false
+            });
+            
+            localStorage.setItem('eiximara_project', JSON.stringify(userProject));
+            
+            // Reset form and update UI
+            deliveryForm.reset();
+            updateProjectsList();
+            
+            alert('Project delivered successfully! The user can now access their website and GitHub repository.');
+          }
+        });
+      }
+      
+      // Transfer repo button (manual trigger)
+      if (transferRepoBtn) {
+        transferRepoBtn.addEventListener('click', function() {
+          const projectId = document.getElementById('delivery-project').value;
+          const githubUrl = document.getElementById('github-url').value;
+          
+          if (!projectId || !githubUrl) {
+            alert('Please select a project and enter the GitHub URL first');
+            return;
+          }
+          
+          // Show transfer status
+          document.getElementById('transfer-status').style.display = 'block';
+          
+          alert('GitHub repository transfer initiated! In production, this would call the GitHub API to transfer ownership.');
+        });
+      }
+    });
+  </script>
+</body>
+</html>
