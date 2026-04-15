@@ -121,12 +121,18 @@ h1, h2, h3, h4, h5, h6 {
   width: 100%;
   max-width: 1400px;
   margin: 0 auto;
-  padding: 0 1.5rem;
+  padding: 0 2rem;
+}
+
+@media (min-width: 768px) {
+  .container {
+    padding: 0 3rem;
+  }
 }
 
 @media (min-width: 1024px) {
   .container {
-    padding: 0 3rem;
+    padding: 0 4rem;
   }
 }
 
@@ -407,24 +413,21 @@ h1, h2, h3, h4, h5, h6 {
 
 /* ─── Cuboid Text Rotation ─── */
 .cuboid-container {
-  display: inline-block;
-  perspective: 1200px;
-  perspective-origin: center center;
-  height: 1em;
-  line-height: 0.9;
+  display: inline-flex;
+  align-items: center;
+  perspective: 1000px;
+  height: 1.1em;
   position: relative;
   vertical-align: baseline;
-  overflow: visible;
 }
 
 .cuboid-rotator {
-  display: block;
+  display: inline-block;
   transform-style: preserve-3d;
-  transition: transform 0.7s cubic-bezier(0.4, 0, 0.2, 1);
-  transform-origin: center center 0.5em;
+  transition: transform 0.8s cubic-bezier(0.33, 1, 0.68, 1);
+  transform-origin: center center;
   height: 1em;
   position: relative;
-  transform: rotateX(0deg);
 }
 
 .cuboid-side {
@@ -432,7 +435,7 @@ h1, h2, h3, h4, h5, h6 {
   top: 0;
   left: 0;
   height: 1em;
-  line-height: 0.9;
+  line-height: 1;
   display: flex;
   align-items: center;
   backface-visibility: hidden;
@@ -440,24 +443,22 @@ h1, h2, h3, h4, h5, h6 {
   white-space: nowrap;
 }
 
-/* Face 0 - front (stunning) */
+/* First face only is relative to set width */
 .cuboid-side--0 {
-  transform: translateZ(0.5em);
+  position: relative;
+  transform: rotateX(0deg) translateZ(0.55em);
 }
 
-/* Face 1 - rotated 90deg (beautiful) */
 .cuboid-side--1 {
-  transform: rotateX(-90deg) translateZ(0.5em);
+  transform: rotateX(90deg) translateZ(0.55em);
 }
 
-/* Face 2 - rotated 180deg (amazing) */
 .cuboid-side--2 {
-  transform: rotateX(-180deg) translateZ(0.5em);
+  transform: rotateX(180deg) translateZ(0.55em);
 }
 
-/* Face 3 - rotated 270deg (powerful) */
 .cuboid-side--3 {
-  transform: rotateX(-270deg) translateZ(0.5em);
+  transform: rotateX(270deg) translateZ(0.55em);
 }
 
 /* ─── Section Styles ─── */

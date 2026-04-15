@@ -114,7 +114,7 @@ function initHeroAnimations() {
     heroContent.classList.add('animate-fade-in');
   }, 100);
   
-  // Rotating adjectives - cuboid rotation (matching React: rotateX(index * -90))
+  // Rotating adjectives - cuboid rotation
   let adjectiveIndex = 0;
   
   if (cuboidRotator) {
@@ -123,8 +123,8 @@ function initHeroAnimations() {
     
     setInterval(function() {
       adjectiveIndex = (adjectiveIndex + 1) % 4;
-      // Rotate positive direction to match the negative transforms on the faces
-      cuboidRotator.style.transform = 'rotateX(' + (adjectiveIndex * 90) + 'deg)';
+      // Rotate negative direction to reveal next face
+      cuboidRotator.style.transform = 'rotateX(' + (adjectiveIndex * -90) + 'deg)';
     }, 2500);
   }
   
