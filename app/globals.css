@@ -199,6 +199,51 @@
     }
   }
 
+  .cuboid-container {
+    display: inline-block;
+    perspective: 1000px;
+    perspective-origin: center center;
+    height: 1.15em;
+    line-height: 1.15;
+    position: relative;
+  }
+
+  .cuboid-rotator {
+    display: block;
+    transform-style: preserve-3d;
+    transition: transform 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+    transform-origin: center center;
+    height: 1.15em;
+  }
+
+  .cuboid-side {
+    position: absolute;
+    top: 0;
+    left: 0;
+    backface-visibility: hidden;
+    white-space: nowrap;
+    height: 1.15em;
+    display: flex;
+    align-items: center;
+  }
+
+  .cuboid-side-0 {
+    position: relative;
+    transform: rotateX(0deg) translateZ(0.575em);
+  }
+
+  .cuboid-side-1 {
+    transform: rotateX(90deg) translateZ(0.575em);
+  }
+
+  .cuboid-side-2 {
+    transform: rotateX(180deg) translateZ(0.575em);
+  }
+
+  .cuboid-side-3 {
+    transform: rotateX(-90deg) translateZ(0.575em);
+  }
+
   .noise-overlay {
     position: relative;
   }

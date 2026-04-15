@@ -41,6 +41,8 @@ const steps = [
 export function HowItWorksSection() {
   const [activeStep, setActiveStep] = useState(0);
   const [isVisible, setIsVisible] = useState(false);
+  const [windowState, setWindowState] = useState<'normal' | 'minimized' | 'maximized'>('normal');
+  const [isHoveringControls, setIsHoveringControls] = useState(false);
   const sectionRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -133,19 +135,67 @@ export function HowItWorksSection() {
 
           {/* Details display */}
           <div className="lg:sticky lg:top-32 self-start">
-            <div className="border border-border overflow-hidden bg-secondary/30 rounded-xl">
-              {/* Window header */}
-              <div className="px-6 py-4 border-b border-border flex items-center justify-between">
-                <div className="flex gap-2">
-                  <div className="w-3 h-3 rounded-full bg-primary/40" />
-                  <div className="w-3 h-3 rounded-full bg-accent/40" />
-                  <div className="w-3 h-3 rounded-full bg-muted-foreground/20" />
+            <div 
+              className={`border border-border overflow-hidden bg-secondary/30 rounded-xl transition-all duration-500 ease-out ${
+                windowState === 'minimized' 
+                  ? 'scale-y-0 origin-top opacity-0 h-[60px]' 
+                  : windowState === 'maximized'
+                  ? 'scale-105 shadow-2xl shadow-primary/10'
+                  : ''
+              }`}
+            >
+              {/* Window header - Mac style */}
+              <div className="px-6 py-4 border-b border-border flex items-center justify-between bg-secondary/50">
+                <div 
+                  className="flex gap-2"
+                  onMouseEnter={() => setIsHoveringControls(true)}
+                  onMouseLeave={() => setIsHoveringControls(false)}
+                >
+                  {/* Close button (red) */}
+                  <button
+                    type="button"
+                    onClick={() => setWindowState('minimized')}
+                    className="w-3 h-3 rounded-full bg-[#FF5F56] hover:bg-[#FF5F56] transition-all duration-200 flex items-center justify-center group relative"
+                    aria-label="Close window"
+                  >
+                    {isHoveringControls && (
+                      <svg className="w-2 h-2 text-[#4A0002] opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    )}
+                  </button>
+                  {/* Minimize button (yellow) */}
+                  <button
+                    type="button"
+                    onClick={() => setWindowState(windowState === 'minimized' ? 'normal' : 'minimized')}
+                    className="w-3 h-3 rounded-full bg-[#FFBD2E] hover:bg-[#FFBD2E] transition-all duration-200 flex items-center justify-center group"
+                    aria-label="Minimize window"
+                  >
+                    {isHoveringControls && (
+                      <svg className="w-2 h-2 text-[#995700] opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M20 12H4" />
+                      </svg>
+                    )}
+                  </button>
+                  {/* Maximize button (green) */}
+                  <button
+                    type="button"
+                    onClick={() => setWindowState(windowState === 'maximized' ? 'normal' : 'maximized')}
+                    className="w-3 h-3 rounded-full bg-[#27C93F] hover:bg-[#27C93F] transition-all duration-200 flex items-center justify-center group"
+                    aria-label="Maximize window"
+                  >
+                    {isHoveringControls && (
+                      <svg className="w-1.5 h-1.5 text-[#006500] opacity-80" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M4 4h6v2H6v4H4V4zm10 0h6v6h-2V6h-4V4zM6 14v4h4v2H4v-6h2zm12 0v4h-4v2h6v-6h-2z" />
+                      </svg>
+                    )}
+                  </button>
                 </div>
                 <span className="text-xs font-mono text-muted-foreground">step {activeStep + 1} of 3</span>
               </div>
 
               {/* Details content */}
-              <div className="p-8 min-h-[320px]">
+              <div className={`p-8 min-h-[320px] transition-all duration-300 ${windowState === 'minimized' ? 'opacity-0' : 'opacity-100'}`}>
                 <h4 className="text-xl font-display font-bold mb-6 text-gradient">
                   {steps[activeStep].title}
                 </h4>
@@ -166,7 +216,7 @@ export function HowItWorksSection() {
               </div>
 
               {/* Status */}
-              <div className="px-6 py-4 border-t border-border flex items-center gap-3">
+              <div className={`px-6 py-4 border-t border-border flex items-center gap-3 transition-all duration-300 ${windowState === 'minimized' ? 'opacity-0' : 'opacity-100'}`}>
                 <span className="w-2 h-2 rounded-full bg-accent animate-pulse" />
                 <span className="text-xs font-mono text-muted-foreground">
                   {activeStep === 0 && "Start your journey"}
@@ -175,6 +225,20 @@ export function HowItWorksSection() {
                 </span>
               </div>
             </div>
+            
+            {/* Restore button when minimized */}
+            {windowState === 'minimized' && (
+              <button
+                type="button"
+                onClick={() => setWindowState('normal')}
+                className="mt-4 w-full py-3 px-4 border border-border rounded-lg bg-secondary/30 hover:bg-secondary/50 transition-all duration-200 flex items-center justify-center gap-2 text-sm text-muted-foreground hover:text-foreground"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5v-4m0 4h-4m4 0l-5-5" />
+                </svg>
+                Click to restore window
+              </button>
+            )}
           </div>
         </div>
       </div>

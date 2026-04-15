@@ -7,10 +7,12 @@ import { AnimatedSphere } from "./animated-sphere";
 import Link from "next/link";
 
 const words = ["portfolios", "websites", "software", "brands"];
+const adjectives = ["stunning", "beautiful", "amazing", "powerful"];
 
 export function HeroSection() {
   const [isVisible, setIsVisible] = useState(false);
   const [wordIndex, setWordIndex] = useState(0);
+  const [adjectiveIndex, setAdjectiveIndex] = useState(0);
 
   useEffect(() => {
     setIsVisible(true);
@@ -19,6 +21,13 @@ export function HeroSection() {
   useEffect(() => {
     const interval = setInterval(() => {
       setWordIndex((prev) => (prev + 1) % words.length);
+    }, 2500);
+    return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setAdjectiveIndex((prev) => (prev + 1) % adjectives.length);
     }, 2500);
     return () => clearInterval(interval);
   }, []);
@@ -76,7 +85,24 @@ export function HeroSection() {
               isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
             }`}
           >
-            <span className="block">We build stunning</span>
+            <span className="block">We build</span>
+            <span className="block">
+              <span className="cuboid-container">
+                <span 
+                  className="cuboid-rotator"
+                  style={{ transform: `rotateX(${adjectiveIndex * -90}deg)` }}
+                >
+                  {adjectives.map((adj, idx) => (
+                    <span
+                      key={adj}
+                      className={`cuboid-side cuboid-side-${idx}`}
+                    >
+                      {adj}
+                    </span>
+                  ))}
+                </span>
+              </span>
+            </span>
             <span className="block">
               <span className="relative inline-block text-gradient">
                 <span 
@@ -95,7 +121,6 @@ export function HeroSection() {
                     </span>
                   ))}
                 </span>
-                <span className="absolute -bottom-2 left-0 right-0 h-3 bg-primary/20 rounded-full" />
               </span>
             </span>
           </h1>
@@ -141,7 +166,7 @@ export function HeroSection() {
       
       {/* Stats marquee - full width outside container */}
       <div 
-        className={`absolute bottom-24 left-0 right-0 transition-all duration-700 delay-500 ${
+        className={`absolute bottom-12 left-0 right-0 transition-all duration-700 delay-500 ${
           isVisible ? "opacity-100" : "opacity-0"
         }`}
       >

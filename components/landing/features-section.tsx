@@ -249,7 +249,9 @@ function ServiceCard({ service, index }: { service: typeof services[0]; index: n
       <div className="flex flex-col lg:flex-row gap-8 lg:gap-16 py-12 lg:py-20 border-b border-border">
         {/* Number */}
         <div className="shrink-0">
-          <span className="font-mono text-sm text-primary">{service.number}</span>
+          <span className="font-mono text-5xl lg:text-7xl font-bold text-transparent bg-clip-text bg-gradient-to-br from-primary/40 via-primary/20 to-transparent tracking-tighter">
+            {service.number}
+          </span>
         </div>
         
         {/* Content */}
