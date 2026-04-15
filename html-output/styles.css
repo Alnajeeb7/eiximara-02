@@ -501,48 +501,98 @@ h1, h2, h3, h4, h5, h6 {
 
 /* ─── Navigation (Dynamic Island Style) ─── */
 .nav {
-  position: fixed;
-  top: 0.75rem;
-  left: 50%;
-  transform: translateX(-50%);
+  position: relative;
+  display: flex;
+  justify-content: center;
+  padding: 1rem 1rem 0;
   z-index: 50;
-  width: calc(100% - 2rem);
-  max-width: 1100px;
-  transition: all var(--transition-slow);
 }
 
 @media (min-width: 768px) {
   .nav {
-    top: 1rem;
-    width: auto;
-    max-width: none;
+    padding: 1.25rem 2rem 0;
   }
 }
 
 .nav__wrapper {
-  background: rgba(255, 255, 255, 0.88);
-  backdrop-filter: blur(24px) saturate(180%);
-  -webkit-backdrop-filter: blur(24px) saturate(180%);
-  border: 1px solid rgba(0, 0, 0, 0.06);
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.95) 0%,
+    rgba(250, 250, 255, 0.9) 50%,
+    rgba(255, 255, 255, 0.95) 100%
+  );
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.8);
   border-radius: 9999px;
   box-shadow: 
-    0 2px 8px rgba(0, 0, 0, 0.04),
-    0 4px 20px rgba(0, 0, 0, 0.06),
-    0 0 0 0.5px rgba(0, 0, 0, 0.04),
-    inset 0 1px 0 rgba(255, 255, 255, 0.9);
-  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    0 1px 2px rgba(0, 0, 0, 0.02),
+    0 4px 16px rgba(0, 0, 0, 0.04),
+    0 8px 32px rgba(0, 0, 0, 0.03),
+    0 0 0 1px rgba(0, 0, 0, 0.03),
+    inset 0 1px 0 rgba(255, 255, 255, 1),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.02);
+  transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
   transform-origin: center center;
+  position: relative;
+  overflow: hidden;
 }
 
-/* Hover effect - subtle scale and glow */
+/* Shimmer effect */
+.nav__wrapper::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.4) 50%,
+    transparent 100%
+  );
+  transition: left 0.8s ease;
+  pointer-events: none;
+}
+
+.nav__wrapper:hover::before {
+  left: 100%;
+}
+
+/* Subtle gradient border glow */
+.nav__wrapper::after {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: 9999px;
+  background: linear-gradient(
+    135deg,
+    rgba(138, 43, 226, 0.15) 0%,
+    rgba(79, 172, 254, 0.1) 50%,
+    rgba(138, 43, 226, 0.15) 100%
+  );
+  z-index: -1;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  pointer-events: none;
+}
+
+.nav__wrapper:hover::after {
+  opacity: 1;
+}
+
+/* Hover effect - scale and enhanced glow */
 .nav__wrapper:hover {
-  transform: scale(1.01);
+  transform: scale(1.015) translateY(-1px);
   box-shadow: 
-    0 4px 16px rgba(0, 0, 0, 0.06),
-    0 8px 32px rgba(0, 0, 0, 0.08),
-    0 0 0 0.5px rgba(0, 0, 0, 0.05),
-    0 0 40px rgba(138, 43, 226, 0.06),
-    inset 0 1px 0 rgba(255, 255, 255, 1);
+    0 4px 20px rgba(0, 0, 0, 0.06),
+    0 12px 40px rgba(0, 0, 0, 0.05),
+    0 0 0 1px rgba(138, 43, 226, 0.08),
+    0 0 60px rgba(138, 43, 226, 0.08),
+    0 0 100px rgba(79, 172, 254, 0.05),
+    inset 0 1px 0 rgba(255, 255, 255, 1),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.01);
 }
 
 .nav__inner {
@@ -552,25 +602,16 @@ h1, h2, h3, h4, h5, h6 {
   padding: 0 1rem;
   height: 3.25rem;
   gap: 1.5rem;
-  transition: all var(--transition-slow);
+  position: relative;
+  z-index: 1;
 }
 
 @media (min-width: 768px) {
   .nav__inner {
-    padding: 0 1.25rem 0 1.5rem;
+    padding: 0 1.5rem;
     height: 3.5rem;
     gap: 2rem;
   }
-}
-
-/* Scrolled state - more prominent shadow */
-.nav--scrolled .nav__wrapper {
-  background: rgba(255, 255, 255, 0.92);
-  box-shadow: 
-    0 4px 12px rgba(0, 0, 0, 0.08),
-    0 8px 32px rgba(0, 0, 0, 0.1),
-    0 0 0 0.5px rgba(0, 0, 0, 0.06),
-    inset 0 1px 0 rgba(255, 255, 255, 1);
 }
 
 .nav--mobile-open .nav__wrapper {

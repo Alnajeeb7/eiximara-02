@@ -55,22 +55,7 @@ function initNavigation() {
   
   if (!nav) return;
   
-  let isScrolled = false;
   let isMobileOpen = false;
-  
-  // Handle scroll
-  function handleScroll() {
-    const scrollY = window.scrollY;
-    const shouldBeScrolled = scrollY > 20;
-    
-    if (shouldBeScrolled !== isScrolled) {
-      isScrolled = shouldBeScrolled;
-      nav.classList.toggle('nav--scrolled', isScrolled);
-    }
-  }
-  
-  window.addEventListener('scroll', handleScroll, { passive: true });
-  handleScroll(); // Initial check
   
   // Mobile menu toggle
   if (navToggle && navMobile) {
