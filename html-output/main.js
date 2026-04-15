@@ -114,14 +114,18 @@ function initHeroAnimations() {
     heroContent.classList.add('animate-fade-in');
   }, 100);
   
-  // Rotating adjectives
+  // Rotating adjectives - cuboid rotation
   const adjectives = ['stunning', 'beautiful', 'amazing', 'powerful'];
   let adjectiveIndex = 0;
   
   if (cuboidRotator) {
+    // Set initial state
+    cuboidRotator.style.transform = 'rotateX(0deg)';
+    
     setInterval(function() {
       adjectiveIndex = (adjectiveIndex + 1) % adjectives.length;
-      cuboidRotator.style.transform = 'rotateX(' + (adjectiveIndex * -90) + 'deg)';
+      // Rotate forward (positive direction) for smooth continuous rotation
+      cuboidRotator.style.transform = 'rotateX(' + (adjectiveIndex * 90) + 'deg)';
     }, 2500);
   }
   
@@ -158,6 +162,9 @@ function initAnimatedSphere() {
   const chars = '░▒▓█▀▄▌▐│─┤├┴┬╭╮╰╯';
   let time = 0;
   let animationFrame;
+  let lastTime = 0;
+  const targetFPS = 60;
+  const frameInterval = 1000 / targetFPS;
   
   function resize() {
     const dpr = window.devicePixelRatio || 1;
@@ -168,42 +175,60 @@ function initAnimatedSphere() {
   }
   
   function getColor(depth) {
-    const r = Math.floor(127 + (44 - 127) * depth);
-    const g = Math.floor(90 + (182 - 90) * depth);
-    const b = Math.floor(240 + (125 - 240) * depth);
+    // Smoother color interpolation
+    const r = Math.floor(140 + (60 - 140) * depth);
+    const g = Math.floor(100 + (180 - 100) * depth);
+    const b = Math.floor(220 + (140 - 220) * depth);
     return { r: r, g: g, b: b };
   }
   
-  function render() {
+  function render(currentTime) {
+    animationFrame = requestAnimationFrame(render);
+    
+    // Frame rate limiting for consistent animation
+    const deltaTime = currentTime - lastTime;
+    if (deltaTime < frameInterval) return;
+    lastTime = currentTime - (deltaTime % frameInterval);
+    
     const rect = canvas.getBoundingClientRect();
     ctx.clearRect(0, 0, rect.width, rect.height);
     
     const centerX = rect.width / 2;
     const centerY = rect.height / 2;
-    const radius = Math.min(rect.width, rect.height) * 0.525;
+    const radius = Math.min(rect.width, rect.height) * 0.42;
     
-    ctx.font = '12px monospace';
+    ctx.font = '11px monospace';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     
     const points = [];
     
-    // Generate sphere points
-    for (let phi = 0; phi < Math.PI * 2; phi += 0.15) {
-      for (let theta = 0; theta < Math.PI; theta += 0.15) {
-        let x = Math.sin(theta) * Math.cos(phi + time * 0.5);
-        let y = Math.sin(theta) * Math.sin(phi + time * 0.5);
+    // Single consistent rotation speed for uniform spinning
+    const rotationY = time * 0.4;
+    const rotationX = time * 0.15;
+    
+    // Generate sphere points with even distribution
+    const phiStep = 0.12;
+    const thetaStep = 0.12;
+    
+    for (let phi = 0; phi < Math.PI * 2; phi += phiStep) {
+      for (let theta = 0; theta < Math.PI; theta += thetaStep) {
+        // Sphere coordinates (no time-based wobble in base position)
+        let x = Math.sin(theta) * Math.cos(phi);
+        let y = Math.sin(theta) * Math.sin(phi);
         let z = Math.cos(theta);
         
-        // Rotate around Y axis
-        const rotY = time * 0.3;
-        const newX = x * Math.cos(rotY) - z * Math.sin(rotY);
-        const newZ = x * Math.sin(rotY) + z * Math.cos(rotY);
+        // Smooth rotation around Y axis only
+        const cosY = Math.cos(rotationY);
+        const sinY = Math.sin(rotationY);
+        const newX = x * cosY - z * sinY;
+        const newZ = x * sinY + z * cosY;
         
-        // Rotate around X axis
-        const rotX = time * 0.2;
-        const newY = y * Math.cos(rotX) - newZ * Math.sin(rotX);
-        const finalZ = y * Math.sin(rotX) + newZ * Math.cos(rotX);
+        // Slight tilt around X axis for visual interest
+        const cosX = Math.cos(rotationX);
+        const sinX = Math.sin(rotationX);
+        const newY = y * cosX - newZ * sinX;
+        const finalZ = y * sinX + newZ * cosX;
         
         const depth = (finalZ + 1) / 2;
         const charIndex = Math.floor(depth * (chars.length - 1));
@@ -212,30 +237,30 @@ function initAnimatedSphere() {
           x: centerX + newX * radius,
           y: centerY + newY * radius,
           z: finalZ,
-          char: chars[charIndex]
+          char: chars[charIndex],
+          depth: depth
         });
       }
     }
     
-    // Sort by z for depth
+    // Sort by z for proper depth ordering
     points.sort(function(a, b) { return a.z - b.z; });
     
-    // Draw points
+    // Draw points with smooth opacity transition
     points.forEach(function(point) {
-      const depth = (point.z + 1) / 2;
-      const alpha = 0.2 + depth * 0.6;
-      const color = getColor(depth);
+      const alpha = 0.15 + point.depth * 0.7;
+      const color = getColor(point.depth);
       ctx.fillStyle = 'rgba(' + color.r + ', ' + color.g + ', ' + color.b + ', ' + alpha + ')';
       ctx.fillText(point.char, point.x, point.y);
     });
     
-    time += 0.02;
-    animationFrame = requestAnimationFrame(render);
+    // Consistent time increment for smooth animation
+    time += 0.012;
   }
   
   resize();
   window.addEventListener('resize', resize);
-  render();
+  requestAnimationFrame(render);
 }
 
 /* ─── Scroll Animations ─── */

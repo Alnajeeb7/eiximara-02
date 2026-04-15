@@ -407,20 +407,26 @@ h1, h2, h3, h4, h5, h6 {
 
 /* ─── Cuboid Text Rotation ─── */
 .cuboid-container {
-  display: inline-block;
-  perspective: 1000px;
+  display: inline-flex;
+  align-items: center;
+  vertical-align: baseline;
+  perspective: 1200px;
   perspective-origin: center center;
-  height: 1.15em;
-  line-height: 1.15;
+  height: 1em;
+  line-height: 1;
   position: relative;
+  overflow: visible;
 }
 
 .cuboid-rotator {
-  display: block;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
   transform-style: preserve-3d;
-  transition: transform 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform 0.8s cubic-bezier(0.33, 1, 0.68, 1);
   transform-origin: center center;
-  height: 1.15em;
+  height: 1em;
+  position: relative;
 }
 
 .cuboid-side {
@@ -428,27 +434,29 @@ h1, h2, h3, h4, h5, h6 {
   top: 0;
   left: 0;
   backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
   white-space: nowrap;
-  height: 1.15em;
+  height: 1em;
+  line-height: 1;
   display: flex;
   align-items: center;
 }
 
 .cuboid-side--0 {
   position: relative;
-  transform: rotateX(0deg) translateZ(0.575em);
+  transform: rotateX(0deg) translateZ(0.5em);
 }
 
 .cuboid-side--1 {
-  transform: rotateX(90deg) translateZ(0.575em);
+  transform: rotateX(-90deg) translateZ(0.5em);
 }
 
 .cuboid-side--2 {
-  transform: rotateX(180deg) translateZ(0.575em);
+  transform: rotateX(-180deg) translateZ(0.5em);
 }
 
 .cuboid-side--3 {
-  transform: rotateX(-90deg) translateZ(0.575em);
+  transform: rotateX(-270deg) translateZ(0.5em);
 }
 
 /* ─── Section Styles ─── */
@@ -688,19 +696,38 @@ h1, h2, h3, h4, h5, h6 {
 
 .hero__canvas {
   position: absolute;
-  right: 0;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 600px;
-  height: 600px;
-  opacity: 0.3;
+  right: -5%;
+  top: 8%;
+  width: 500px;
+  height: 500px;
+  opacity: 0.35;
   pointer-events: none;
+}
+
+@media (min-width: 768px) {
+  .hero__canvas {
+    right: 0;
+    top: 10%;
+    width: 550px;
+    height: 550px;
+  }
 }
 
 @media (min-width: 1024px) {
   .hero__canvas {
-    width: 800px;
-    height: 800px;
+    right: 5%;
+    top: 8%;
+    width: 650px;
+    height: 650px;
+    opacity: 0.4;
+  }
+}
+
+@media (min-width: 1280px) {
+  .hero__canvas {
+    right: 8%;
+    width: 700px;
+    height: 700px;
   }
 }
 
@@ -761,8 +788,16 @@ h1, h2, h3, h4, h5, h6 {
 
 .hero__title {
   font-size: clamp(3rem, 12vw, 9rem);
-  line-height: 0.9;
+  line-height: 0.95;
   margin-bottom: 3rem;
+}
+
+.hero__title > span {
+  display: inline;
+}
+
+.hero__title .cuboid-container {
+  margin-left: 0.15em;
 }
 
 .hero__description {
@@ -837,7 +872,7 @@ h1, h2, h3, h4, h5, h6 {
   margin-top: 0.25rem;
 }
 
-/* ─── Features / Services Section ─── */
+/* ─��─ Features / Services Section ─── */
 .services__item {
   display: flex;
   flex-direction: column;
