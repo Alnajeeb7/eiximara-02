@@ -104,8 +104,8 @@ function initNavigation() {
 /* ─── Hero Animations ─── */
 function initHeroAnimations() {
   const heroContent = document.querySelector('.hero__content');
-  const cuboidRotator = document.querySelector('.cuboid-rotator');
-  const wordSpan = document.querySelector('.hero__word');
+  const cuboidRotator = document.getElementById('cuboid-rotator');
+  const wordSpan = document.getElementById('hero-word');
   
   if (!heroContent) return;
   
@@ -114,41 +114,50 @@ function initHeroAnimations() {
     heroContent.classList.add('animate-fade-in');
   }, 100);
   
-  // Rotating adjectives - cuboid rotation
+  // Rotating adjectives - cuboid rotation (matching React: rotateX(index * -90))
   const adjectives = ['stunning', 'beautiful', 'amazing', 'powerful'];
   let adjectiveIndex = 0;
   
   if (cuboidRotator) {
-    // Set initial state
+    // Set initial state - front face visible
     cuboidRotator.style.transform = 'rotateX(0deg)';
     
     setInterval(function() {
       adjectiveIndex = (adjectiveIndex + 1) % adjectives.length;
-      // Rotate forward (positive direction) for smooth continuous rotation
-      cuboidRotator.style.transform = 'rotateX(' + (adjectiveIndex * 90) + 'deg)';
+      // Rotate in NEGATIVE direction (like original React component)
+      // This makes the text rotate "down" to reveal the next word
+      cuboidRotator.style.transform = 'rotateX(' + (adjectiveIndex * -90) + 'deg)';
     }, 2500);
   }
   
-  // Rotating words
+  // Rotating words with character animation
   const words = ['portfolios', 'websites', 'software', 'brands'];
   let wordIndex = 0;
   
   if (wordSpan) {
+    // Initialize first word with animation
+    animateWord(wordSpan, words[0]);
+    
     setInterval(function() {
       wordIndex = (wordIndex + 1) % words.length;
-      const word = words[wordIndex];
-      
-      // Create animated characters
-      wordSpan.innerHTML = '';
-      word.split('').forEach(function(char, i) {
-        const span = document.createElement('span');
-        span.className = 'animate-char-in';
-        span.style.animationDelay = (i * 50) + 'ms';
-        span.textContent = char;
-        wordSpan.appendChild(span);
-      });
+      animateWord(wordSpan, words[wordIndex]);
     }, 2500);
   }
+}
+
+function animateWord(container, word) {
+  // Clear previous content
+  container.innerHTML = '';
+  
+  // Create animated characters
+  word.split('').forEach(function(char, i) {
+    const span = document.createElement('span');
+    span.className = 'animate-char-in';
+    span.style.animationDelay = (i * 50) + 'ms';
+    span.style.display = 'inline-block';
+    span.textContent = char;
+    container.appendChild(span);
+  });
 }
 
 /* ─── Animated Sphere (Hero Background) ─── */
@@ -159,12 +168,9 @@ function initAnimatedSphere() {
   const ctx = canvas.getContext('2d');
   if (!ctx) return;
   
+  // Characters for sphere rendering (matching original)
   const chars = '░▒▓█▀▄▌▐│─┤├┴┬╭╮╰╯';
   let time = 0;
-  let animationFrame;
-  let lastTime = 0;
-  const targetFPS = 60;
-  const frameInterval = 1000 / targetFPS;
   
   function resize() {
     const dpr = window.devicePixelRatio || 1;
@@ -174,93 +180,76 @@ function initAnimatedSphere() {
     ctx.scale(dpr, dpr);
   }
   
+  // Color gradient from purple to teal (matching original)
   function getColor(depth) {
-    // Smoother color interpolation
-    const r = Math.floor(140 + (60 - 140) * depth);
-    const g = Math.floor(100 + (180 - 100) * depth);
-    const b = Math.floor(220 + (140 - 220) * depth);
+    const r = Math.floor(127 + (44 - 127) * depth);
+    const g = Math.floor(90 + (182 - 90) * depth);
+    const b = Math.floor(240 + (125 - 240) * depth);
     return { r: r, g: g, b: b };
   }
   
-  function render(currentTime) {
-    animationFrame = requestAnimationFrame(render);
-    
-    // Frame rate limiting for consistent animation
-    const deltaTime = currentTime - lastTime;
-    if (deltaTime < frameInterval) return;
-    lastTime = currentTime - (deltaTime % frameInterval);
-    
+  function render() {
     const rect = canvas.getBoundingClientRect();
     ctx.clearRect(0, 0, rect.width, rect.height);
     
     const centerX = rect.width / 2;
     const centerY = rect.height / 2;
-    const radius = Math.min(rect.width, rect.height) * 0.42;
+    const radius = Math.min(rect.width, rect.height) * 0.525;
     
-    ctx.font = '11px monospace';
+    ctx.font = '12px monospace';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     
     const points = [];
     
-    // Single consistent rotation speed for uniform spinning
-    const rotationY = time * 0.4;
-    const rotationX = time * 0.15;
-    
-    // Generate sphere points with even distribution
-    const phiStep = 0.12;
-    const thetaStep = 0.12;
-    
-    for (let phi = 0; phi < Math.PI * 2; phi += phiStep) {
-      for (let theta = 0; theta < Math.PI; theta += thetaStep) {
-        // Sphere coordinates (no time-based wobble in base position)
-        let x = Math.sin(theta) * Math.cos(phi);
-        let y = Math.sin(theta) * Math.sin(phi);
-        let z = Math.cos(theta);
+    // Generate sphere points (matching original algorithm exactly)
+    for (var phi = 0; phi < Math.PI * 2; phi += 0.15) {
+      for (var theta = 0; theta < Math.PI; theta += 0.15) {
+        var x = Math.sin(theta) * Math.cos(phi + time * 0.5);
+        var y = Math.sin(theta) * Math.sin(phi + time * 0.5);
+        var z = Math.cos(theta);
         
-        // Smooth rotation around Y axis only
-        const cosY = Math.cos(rotationY);
-        const sinY = Math.sin(rotationY);
-        const newX = x * cosY - z * sinY;
-        const newZ = x * sinY + z * cosY;
+        // Rotate around Y axis
+        var rotY = time * 0.3;
+        var newX = x * Math.cos(rotY) - z * Math.sin(rotY);
+        var newZ = x * Math.sin(rotY) + z * Math.cos(rotY);
         
-        // Slight tilt around X axis for visual interest
-        const cosX = Math.cos(rotationX);
-        const sinX = Math.sin(rotationX);
-        const newY = y * cosX - newZ * sinX;
-        const finalZ = y * sinX + newZ * cosX;
+        // Rotate around X axis
+        var rotX = time * 0.2;
+        var newY = y * Math.cos(rotX) - newZ * Math.sin(rotX);
+        var finalZ = y * Math.sin(rotX) + newZ * Math.cos(rotX);
         
-        const depth = (finalZ + 1) / 2;
-        const charIndex = Math.floor(depth * (chars.length - 1));
+        var depth = (finalZ + 1) / 2;
+        var charIndex = Math.floor(depth * (chars.length - 1));
         
         points.push({
           x: centerX + newX * radius,
           y: centerY + newY * radius,
           z: finalZ,
-          char: chars[charIndex],
-          depth: depth
+          char: chars[charIndex]
         });
       }
     }
     
-    // Sort by z for proper depth ordering
+    // Sort by z for depth ordering
     points.sort(function(a, b) { return a.z - b.z; });
     
-    // Draw points with smooth opacity transition
+    // Draw points with gradient colors
     points.forEach(function(point) {
-      const alpha = 0.15 + point.depth * 0.7;
-      const color = getColor(point.depth);
+      var depth = (point.z + 1) / 2;
+      var alpha = 0.2 + depth * 0.6;
+      var color = getColor(depth);
       ctx.fillStyle = 'rgba(' + color.r + ', ' + color.g + ', ' + color.b + ', ' + alpha + ')';
       ctx.fillText(point.char, point.x, point.y);
     });
     
-    // Consistent time increment for smooth animation
-    time += 0.012;
+    time += 0.02;
+    requestAnimationFrame(render);
   }
   
   resize();
   window.addEventListener('resize', resize);
-  requestAnimationFrame(render);
+  render();
 }
 
 /* ─── Scroll Animations ─── */
