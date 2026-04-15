@@ -516,29 +516,19 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .nav__wrapper {
-  background: linear-gradient(
-    135deg,
-    rgba(15, 15, 20, 0.85) 0%,
-    rgba(25, 25, 35, 0.9) 50%,
-    rgba(15, 15, 20, 0.85) 100%
-  );
-  backdrop-filter: blur(24px) saturate(180%);
-  -webkit-backdrop-filter: blur(24px) saturate(180%);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(20, 20, 25, 0.9);
+  backdrop-filter: blur(20px) saturate(150%);
+  -webkit-backdrop-filter: blur(20px) saturate(150%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 9999px;
-  box-shadow: 
-    0 4px 24px rgba(0, 0, 0, 0.25),
-    0 8px 48px rgba(0, 0, 0, 0.15),
-    0 0 0 1px rgba(255, 255, 255, 0.05),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.2);
-  transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+  transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
   transform-origin: center center;
   position: relative;
   overflow: hidden;
 }
 
-/* Animated gradient border */
+/* Subtle animated border on hover */
 .nav__wrapper::before {
   content: '';
   position: absolute;
@@ -547,11 +537,9 @@ h1, h2, h3, h4, h5, h6 {
   padding: 1px;
   background: linear-gradient(
     90deg,
-    rgba(138, 43, 226, 0.5) 0%,
-    rgba(79, 172, 254, 0.5) 25%,
-    rgba(138, 43, 226, 0.5) 50%,
-    rgba(79, 172, 254, 0.5) 75%,
-    rgba(138, 43, 226, 0.5) 100%
+    rgba(138, 43, 226, 0.4) 0%,
+    rgba(79, 172, 254, 0.3) 50%,
+    rgba(138, 43, 226, 0.4) 100%
   );
   background-size: 200% 100%;
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
@@ -559,8 +547,8 @@ h1, h2, h3, h4, h5, h6 {
   -webkit-mask-composite: xor;
   mask-composite: exclude;
   opacity: 0;
-  animation: borderGlow 3s linear infinite;
-  transition: opacity 0.4s ease;
+  animation: borderGlow 4s linear infinite;
+  transition: opacity 0.3s ease;
   pointer-events: none;
 }
 
@@ -573,36 +561,11 @@ h1, h2, h3, h4, h5, h6 {
   opacity: 1;
 }
 
-/* Inner glow pulse */
-.nav__wrapper::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: 9999px;
-  background: radial-gradient(
-    ellipse at center,
-    rgba(138, 43, 226, 0.15) 0%,
-    transparent 70%
-  );
-  opacity: 0;
-  transition: opacity 0.4s ease;
-  pointer-events: none;
-}
-
-.nav__wrapper:hover::after {
-  opacity: 1;
-}
-
-/* Hover effect */
+/* Hover effect - subtle scale */
 .nav__wrapper:hover {
-  transform: scale(1.02);
-  box-shadow: 
-    0 8px 32px rgba(0, 0, 0, 0.3),
-    0 16px 64px rgba(0, 0, 0, 0.2),
-    0 0 80px rgba(138, 43, 226, 0.15),
-    0 0 120px rgba(79, 172, 254, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.15),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.2);
+  transform: scale(1.01);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  border-color: rgba(255, 255, 255, 0.15);
 }
 
 .nav__inner {
@@ -627,11 +590,8 @@ h1, h2, h3, h4, h5, h6 {
 
 /* ─── Contracted State (on scroll) ─── */
 .nav--contracted .nav__wrapper {
-  transform: scale(0.92);
-  box-shadow: 
-    0 2px 16px rgba(0, 0, 0, 0.3),
-    0 4px 32px rgba(0, 0, 0, 0.2),
-    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  transform: scale(0.94);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
 }
 
 .nav--contracted .nav__inner {
@@ -680,17 +640,12 @@ h1, h2, h3, h4, h5, h6 {
 
 /* ─── Expanded State (scroll up) ─── */
 .nav--expanded .nav__wrapper {
-  transform: scale(1.03);
-  box-shadow: 
-    0 8px 40px rgba(0, 0, 0, 0.35),
-    0 20px 80px rgba(0, 0, 0, 0.25),
-    0 0 100px rgba(138, 43, 226, 0.2),
-    0 0 150px rgba(79, 172, 254, 0.15),
-    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  transform: scale(1.02);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
 }
 
 .nav--expanded .nav__wrapper::before {
-  opacity: 1;
+  opacity: 0.8;
 }
 
 .nav--mobile-open .nav__wrapper {
