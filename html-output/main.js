@@ -192,19 +192,21 @@ function initAnimatedSphere() {
     const rect = canvas.getBoundingClientRect();
     ctx.clearRect(0, 0, rect.width, rect.height);
     
-    const centerX = rect.width / 2;
-    const centerY = rect.height / 2;
-    const radius = Math.min(rect.width, rect.height) * 0.525;
+    // Position sphere to the left side of canvas, use larger radius
+    const centerX = rect.width * 0.35;
+    const centerY = rect.height * 0.45;
+    // Use a large radius based on height for full coverage
+    const radius = Math.max(rect.width, rect.height) * 0.55;
     
-    ctx.font = '12px monospace';
+    ctx.font = '14px monospace';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     
     const points = [];
     
-    // Generate sphere points (matching original algorithm exactly)
-    for (var phi = 0; phi < Math.PI * 2; phi += 0.15) {
-      for (var theta = 0; theta < Math.PI; theta += 0.15) {
+    // Generate sphere points with finer step for denser coverage
+    for (var phi = 0; phi < Math.PI * 2; phi += 0.12) {
+      for (var theta = 0; theta < Math.PI; theta += 0.12) {
         var x = Math.sin(theta) * Math.cos(phi + time * 0.5);
         var y = Math.sin(theta) * Math.sin(phi + time * 0.5);
         var z = Math.cos(theta);
@@ -237,13 +239,13 @@ function initAnimatedSphere() {
     // Draw points with gradient colors
     points.forEach(function(point) {
       var depth = (point.z + 1) / 2;
-      var alpha = 0.2 + depth * 0.6;
+      var alpha = 0.25 + depth * 0.55;
       var color = getColor(depth);
       ctx.fillStyle = 'rgba(' + color.r + ', ' + color.g + ', ' + color.b + ', ' + alpha + ')';
       ctx.fillText(point.char, point.x, point.y);
     });
     
-    time += 0.02;
+    time += 0.015;
     requestAnimationFrame(render);
   }
   
