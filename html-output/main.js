@@ -115,7 +115,6 @@ function initHeroAnimations() {
   }, 100);
   
   // Rotating adjectives - cuboid rotation (matching React: rotateX(index * -90))
-  const adjectives = ['stunning', 'beautiful', 'amazing', 'powerful'];
   let adjectiveIndex = 0;
   
   if (cuboidRotator) {
@@ -123,10 +122,9 @@ function initHeroAnimations() {
     cuboidRotator.style.transform = 'rotateX(0deg)';
     
     setInterval(function() {
-      adjectiveIndex = (adjectiveIndex + 1) % adjectives.length;
-      // Rotate in NEGATIVE direction (like original React component)
-      // This makes the text rotate "down" to reveal the next word
-      cuboidRotator.style.transform = 'rotateX(' + (adjectiveIndex * -90) + 'deg)';
+      adjectiveIndex = (adjectiveIndex + 1) % 4;
+      // Rotate positive direction to match the negative transforms on the faces
+      cuboidRotator.style.transform = 'rotateX(' + (adjectiveIndex * 90) + 'deg)';
     }, 2500);
   }
   
@@ -192,21 +190,20 @@ function initAnimatedSphere() {
     const rect = canvas.getBoundingClientRect();
     ctx.clearRect(0, 0, rect.width, rect.height);
     
-    // Position sphere to the left side of canvas, use larger radius
-    const centerX = rect.width * 0.35;
-    const centerY = rect.height * 0.45;
-    // Use a large radius based on height for full coverage
-    const radius = Math.max(rect.width, rect.height) * 0.55;
+    // Center sphere in canvas (matching original exactly)
+    const centerX = rect.width / 2;
+    const centerY = rect.height / 2;
+    const radius = Math.min(rect.width, rect.height) * 0.525;
     
-    ctx.font = '14px monospace';
+    ctx.font = '12px monospace';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     
     const points = [];
     
-    // Generate sphere points with finer step for denser coverage
-    for (var phi = 0; phi < Math.PI * 2; phi += 0.12) {
-      for (var theta = 0; theta < Math.PI; theta += 0.12) {
+    // Generate sphere points (matching original algorithm exactly)
+    for (var phi = 0; phi < Math.PI * 2; phi += 0.15) {
+      for (var theta = 0; theta < Math.PI; theta += 0.15) {
         var x = Math.sin(theta) * Math.cos(phi + time * 0.5);
         var y = Math.sin(theta) * Math.sin(phi + time * 0.5);
         var z = Math.cos(theta);
@@ -239,13 +236,13 @@ function initAnimatedSphere() {
     // Draw points with gradient colors
     points.forEach(function(point) {
       var depth = (point.z + 1) / 2;
-      var alpha = 0.25 + depth * 0.55;
+      var alpha = 0.2 + depth * 0.6;
       var color = getColor(depth);
       ctx.fillStyle = 'rgba(' + color.r + ', ' + color.g + ', ' + color.b + ', ' + alpha + ')';
       ctx.fillText(point.char, point.x, point.y);
     });
     
-    time += 0.015;
+    time += 0.02;
     requestAnimationFrame(render);
   }
   
