@@ -52,13 +52,19 @@
         </a>
       </nav>
       
-      <div class="dashboard__sidebar-footer">
+      <div class="dashboard__sidebar-footer" style="display: flex; flex-direction: column; gap: 0.5rem;">
         <a href="index.html" class="btn btn--ghost btn--sm">
           <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
           </svg>
           Back to Site
         </a>
+        <button type="button" class="btn btn--ghost btn--sm" id="admin-logout" style="color: var(--color-destructive);">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+          </svg>
+          Logout
+        </button>
       </div>
     </aside>
 
@@ -190,55 +196,25 @@
     </main>
   </div>
 
-  <!-- Admin Script -->
+  <!-- Scripts -->
+  <script src="js/api.js"></script>
   <script src="main.js"></script>
   <script>
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', async function() {
       'use strict';
       
-      // Demo: Initialize admin data
-      let adminData = JSON.parse(localStorage.getItem('eiximara_admin') || 'null');
-      if (!adminData) {
-        adminData = {
-          projects: [
-            {
-              id: 'PROJ-1',
-              userId: 'user-1',
-              userName: 'Demo User',
-              userEmail: 'demo@example.com',
-              type: 'Portfolio Website',
-              budget: '$1,500',
-              timeline: 'Standard (2 weeks)',
-              status: 'in_progress',
-              progress: 50,
-              startDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-              paymentStatus: 'pending',
-              paymentUrl: null,
-              projectUrl: null,
-              githubUrl: null
-            }
-          ]
-        };
-        localStorage.setItem('eiximara_admin', JSON.stringify(adminData));
+      // Check authentication and admin role
+      if (!API.isLoggedIn()) {
+        window.location.href = 'auth.html';
+        return;
       }
       
-      // Sync with user project if exists
-      const userProject = JSON.parse(localStorage.getItem('eiximara_project') || 'null');
-      if (userProject) {
-        const existingIndex = adminData.projects.findIndex(p => p.id === userProject.id);
-        if (existingIndex >= 0) {
-          adminData.projects[existingIndex] = { ...adminData.projects[existingIndex], ...userProject };
-        } else {
-          const user = JSON.parse(localStorage.getItem('eiximara_user') || '{}');
-          adminData.projects.push({
-            ...userProject,
-            userId: 'user-' + Date.now(),
-            userName: user.name || 'User',
-            userEmail: user.email || 'user@example.com'
-          });
-        }
-        localStorage.setItem('eiximara_admin', JSON.stringify(adminData));
+      if (!API.isAdmin()) {
+        window.location.href = 'dashboard.html';
+        return;
       }
+      
+      let projects = [];
       
       // DOM Elements
       const sidebar = document.querySelector('.dashboard__sidebar');
@@ -249,49 +225,69 @@
       const deliveryForm = document.getElementById('delivery-form');
       const transferRepoBtn = document.getElementById('transfer-repo-btn');
       
-      // Initialize UI
-      updateProjectsList();
-      updatePaymentsList();
-      populateProjectSelects();
+      // Load data
+      await loadData();
+      
+      async function loadData() {
+        try {
+          projects = await API.getProjects();
+          updateProjectsList();
+          updatePaymentsList();
+          populateProjectSelects();
+        } catch (error) {
+          console.error('Error loading data:', error);
+          alert('Error loading data: ' + error.message);
+        }
+      }
       
       function updateProjectsList() {
         const projectsList = document.getElementById('projects-list');
         
-        projectsList.innerHTML = adminData.projects.map(function(project) {
-          const statusOptions = [
-            { value: 'pending', label: 'Pending' },
-            { value: 'in_progress', label: 'In Progress' },
-            { value: 'review', label: 'Under Review' },
-            { value: 'completed', label: 'Completed' }
-          ];
-          
+        if (projects.length === 0) {
+          projectsList.innerHTML = '<div class="admin__empty">' +
+            '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="48" height="48">' +
+              '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>' +
+            '</svg>' +
+            '<p>No projects yet</p>' +
+          '</div>';
+          return;
+        }
+        
+        const statusOptions = [
+          { value: 'pending', label: 'Pending' },
+          { value: 'in_progress', label: 'In Progress' },
+          { value: 'review', label: 'Under Review' },
+          { value: 'completed', label: 'Completed' }
+        ];
+        
+        projectsList.innerHTML = projects.map(function(project) {
           return '<div class="admin__project-card card">' +
             '<div class="admin__project-header">' +
               '<div class="admin__project-info">' +
-                '<h3 class="admin__project-title font-display">' + project.type + '</h3>' +
-                '<p class="admin__project-id font-mono">' + project.id + '</p>' +
+                '<h3 class="admin__project-title font-display">' + (project.projectType || 'Project') + '</h3>' +
+                '<p class="admin__project-id font-mono">ID: ' + project.id + '</p>' +
               '</div>' +
               '<span class="admin__project-badge admin__project-badge--' + project.status + '">' + 
-                statusOptions.find(s => s.value === project.status).label + 
+                (statusOptions.find(function(s) { return s.value === project.status; }) || { label: 'Unknown' }).label + 
               '</span>' +
             '</div>' +
             '<div class="admin__project-details">' +
               '<div class="admin__project-detail">' +
                 '<span class="admin__project-label">Client</span>' +
-                '<span class="admin__project-value">' + project.userName + '</span>' +
+                '<span class="admin__project-value">' + (project.userName || 'Unknown') + '</span>' +
               '</div>' +
               '<div class="admin__project-detail">' +
                 '<span class="admin__project-label">Email</span>' +
-                '<span class="admin__project-value">' + project.userEmail + '</span>' +
+                '<span class="admin__project-value">' + (project.userEmail || 'N/A') + '</span>' +
               '</div>' +
               '<div class="admin__project-detail">' +
                 '<span class="admin__project-label">Budget</span>' +
-                '<span class="admin__project-value">' + project.budget + '</span>' +
+                '<span class="admin__project-value">' + (project.budget || 'N/A') + '</span>' +
               '</div>' +
               '<div class="admin__project-detail">' +
                 '<span class="admin__project-label">Payment</span>' +
                 '<span class="admin__project-value admin__project-value--' + project.paymentStatus + '">' + 
-                  project.paymentStatus.charAt(0).toUpperCase() + project.paymentStatus.slice(1) + 
+                  (project.paymentStatus ? project.paymentStatus.charAt(0).toUpperCase() + project.paymentStatus.slice(1) : 'Pending') + 
                 '</span>' +
               '</div>' +
             '</div>' +
@@ -306,8 +302,13 @@
               '</div>' +
               '<div class="admin__field admin__field--inline">' +
                 '<label class="label">Progress</label>' +
-                '<input type="number" class="input" min="0" max="100" value="' + project.progress + '" ' +
+                '<input type="number" class="input" min="0" max="100" value="' + (project.progress || 0) + '" ' +
                        'data-project-id="' + project.id + '" data-action="progress">' +
+              '</div>' +
+              '<div class="admin__field admin__field--inline">' +
+                '<label class="label">Amount ($)</label>' +
+                '<input type="number" class="input" min="0" value="' + (project.paymentAmount || 0) + '" ' +
+                       'data-project-id="' + project.id + '" data-action="amount">' +
               '</div>' +
               '<button type="button" class="btn btn--primary btn--sm" data-project-id="' + project.id + '" data-action="update">' +
                 'Update' +
@@ -318,15 +319,25 @@
         
         // Attach event listeners
         document.querySelectorAll('[data-action="update"]').forEach(function(btn) {
-          btn.addEventListener('click', function() {
+          btn.addEventListener('click', async function() {
             const projectId = this.dataset.projectId;
             const statusSelect = document.querySelector('[data-project-id="' + projectId + '"][data-action="status"]');
             const progressInput = document.querySelector('[data-project-id="' + projectId + '"][data-action="progress"]');
+            const amountInput = document.querySelector('[data-project-id="' + projectId + '"][data-action="amount"]');
             
-            updateProject(projectId, {
-              status: statusSelect.value,
-              progress: parseInt(progressInput.value, 10)
-            });
+            this.disabled = true;
+            this.textContent = 'Updating...';
+            
+            try {
+              await API.updateProjectStatus(projectId, statusSelect.value, parseInt(progressInput.value, 10));
+              await API.setPaymentAmount(projectId, parseFloat(amountInput.value));
+              await loadData();
+              alert('Project updated successfully!');
+            } catch (error) {
+              alert('Error updating project: ' + error.message);
+              this.disabled = false;
+              this.textContent = 'Update';
+            }
           });
         });
       }
@@ -335,8 +346,8 @@
         const paymentsList = document.getElementById('payments-list');
         const pendingBadge = document.getElementById('pending-payments');
         
-        const projectsWithPayments = adminData.projects.filter(p => p.paymentStatus === 'submitted' || p.paymentUrl);
-        const pendingCount = adminData.projects.filter(p => p.paymentStatus === 'submitted').length;
+        const projectsWithPayments = projects.filter(function(p) { return p.paymentStatus === 'submitted' || p.paymentUrl; });
+        const pendingCount = projects.filter(function(p) { return p.paymentStatus === 'submitted'; }).length;
         
         pendingBadge.textContent = pendingCount;
         pendingBadge.style.display = pendingCount > 0 ? 'flex' : 'none';
@@ -355,8 +366,8 @@
           return '<div class="admin__payment-card card">' +
             '<div class="admin__payment-header">' +
               '<div class="admin__payment-info">' +
-                '<h3 class="admin__payment-title font-display">' + project.userName + '</h3>' +
-                '<p class="admin__payment-id font-mono">' + project.id + '</p>' +
+                '<h3 class="admin__payment-title font-display">' + (project.userName || 'Unknown') + '</h3>' +
+                '<p class="admin__payment-id font-mono">ID: ' + project.id + '</p>' +
               '</div>' +
               '<span class="admin__payment-badge admin__payment-badge--' + project.paymentStatus + '">' + 
                 (project.paymentStatus === 'submitted' ? 'Pending Verification' : 'Verified') + 
@@ -365,7 +376,7 @@
             '<div class="admin__payment-details">' +
               '<div class="admin__payment-detail">' +
                 '<span class="admin__payment-label">Amount</span>' +
-                '<span class="admin__payment-value text-gradient">' + project.budget + '</span>' +
+                '<span class="admin__payment-value text-gradient">$' + (project.paymentAmount || 0).toLocaleString() + '</span>' +
               '</div>' +
               '<div class="admin__payment-detail">' +
                 '<span class="admin__payment-label">Payment URL/ID</span>' +
@@ -382,23 +393,26 @@
                   '</svg>' +
                   'Verify Payment' +
                 '</button>' +
-                '<button type="button" class="btn btn--outline btn--sm" data-project-id="' + project.id + '" data-action="reject">' +
-                  'Reject' +
-                '</button>' +
               '</div>' : '') +
           '</div>';
         }).join('');
         
         // Attach event listeners
         document.querySelectorAll('[data-action="verify"]').forEach(function(btn) {
-          btn.addEventListener('click', function() {
-            verifyPayment(this.dataset.projectId);
-          });
-        });
-        
-        document.querySelectorAll('[data-action="reject"]').forEach(function(btn) {
-          btn.addEventListener('click', function() {
-            rejectPayment(this.dataset.projectId);
+          btn.addEventListener('click', async function() {
+            const projectId = this.dataset.projectId;
+            this.disabled = true;
+            this.innerHTML = 'Verifying...';
+            
+            try {
+              await API.verifyPayment(projectId);
+              await loadData();
+              alert('Payment verified successfully!');
+            } catch (error) {
+              alert('Error verifying payment: ' + error.message);
+              this.disabled = false;
+              this.innerHTML = '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Verify Payment';
+            }
           });
         });
       }
@@ -407,66 +421,12 @@
         const messageSelect = document.getElementById('message-project');
         const deliverySelect = document.getElementById('delivery-project');
         
-        const options = adminData.projects.map(function(project) {
-          return '<option value="' + project.id + '">' + project.userName + ' - ' + project.type + ' (' + project.id + ')</option>';
+        const options = projects.map(function(project) {
+          return '<option value="' + project.id + '">' + (project.userName || 'Unknown') + ' - ' + (project.projectType || 'Project') + ' (ID: ' + project.id + ')</option>';
         }).join('');
         
         messageSelect.innerHTML = '<option value="">Choose a project...</option>' + options;
         deliverySelect.innerHTML = '<option value="">Choose a project...</option>' + options;
-      }
-      
-      function updateProject(projectId, updates) {
-        const index = adminData.projects.findIndex(p => p.id === projectId);
-        if (index >= 0) {
-          adminData.projects[index] = { ...adminData.projects[index], ...updates };
-          localStorage.setItem('eiximara_admin', JSON.stringify(adminData));
-          
-          // Sync with user project
-          syncUserProject(projectId);
-          
-          updateProjectsList();
-          alert('Project updated successfully!');
-        }
-      }
-      
-      function verifyPayment(projectId) {
-        const index = adminData.projects.findIndex(p => p.id === projectId);
-        if (index >= 0) {
-          adminData.projects[index].paymentStatus = 'verified';
-          localStorage.setItem('eiximara_admin', JSON.stringify(adminData));
-          
-          // Sync with user project
-          syncUserProject(projectId);
-          
-          updatePaymentsList();
-          alert('Payment verified successfully!');
-        }
-      }
-      
-      function rejectPayment(projectId) {
-        const index = adminData.projects.findIndex(p => p.id === projectId);
-        if (index >= 0) {
-          adminData.projects[index].paymentStatus = 'pending';
-          adminData.projects[index].paymentUrl = null;
-          localStorage.setItem('eiximara_admin', JSON.stringify(adminData));
-          
-          // Sync with user project
-          syncUserProject(projectId);
-          
-          updatePaymentsList();
-          alert('Payment rejected. User will need to submit again.');
-        }
-      }
-      
-      function syncUserProject(projectId) {
-        const project = adminData.projects.find(p => p.id === projectId);
-        if (project) {
-          const userProject = JSON.parse(localStorage.getItem('eiximara_project') || '{}');
-          if (userProject.id === projectId) {
-            const updatedUserProject = { ...userProject, ...project };
-            localStorage.setItem('eiximara_project', JSON.stringify(updatedUserProject));
-          }
-        }
       }
       
       // Mobile menu toggle
@@ -500,7 +460,7 @@
       
       // Message form
       if (messageForm) {
-        messageForm.addEventListener('submit', function(e) {
+        messageForm.addEventListener('submit', async function(e) {
           e.preventDefault();
           
           const projectId = document.getElementById('message-project').value;
@@ -511,31 +471,26 @@
             return;
           }
           
-          // Add message to user project
-          const userProject = JSON.parse(localStorage.getItem('eiximara_project') || '{}');
-          if (!userProject.messages) userProject.messages = [];
+          const btn = this.querySelector('button[type="submit"]');
+          btn.disabled = true;
+          btn.innerHTML = 'Sending...';
           
-          userProject.messages.push({
-            id: Date.now(),
-            from: 'EIXIMARA Team',
-            avatar: 'E',
-            content: content,
-            timestamp: new Date().toISOString(),
-            read: false
-          });
+          try {
+            await API.sendMessage(parseInt(projectId, 10), content);
+            document.getElementById('message-content').value = '';
+            alert('Message sent successfully!');
+          } catch (error) {
+            alert('Error sending message: ' + error.message);
+          }
           
-          localStorage.setItem('eiximara_project', JSON.stringify(userProject));
-          
-          // Reset form
-          document.getElementById('message-content').value = '';
-          
-          alert('Message sent successfully!');
+          btn.disabled = false;
+          btn.innerHTML = '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg> Send Message';
         });
       }
       
       // Delivery form
       if (deliveryForm) {
-        deliveryForm.addEventListener('submit', function(e) {
+        deliveryForm.addEventListener('submit', async function(e) {
           e.preventDefault();
           
           const projectId = document.getElementById('delivery-project').value;
@@ -547,59 +502,61 @@
             return;
           }
           
-          // Update admin data
-          const index = adminData.projects.findIndex(p => p.id === projectId);
-          if (index >= 0) {
-            adminData.projects[index].projectUrl = projectUrl;
-            adminData.projects[index].githubUrl = githubUrl;
-            adminData.projects[index].status = 'completed';
-            adminData.projects[index].progress = 100;
-            localStorage.setItem('eiximara_admin', JSON.stringify(adminData));
+          const btn = this.querySelector('button[type="submit"]');
+          btn.disabled = true;
+          btn.innerHTML = 'Delivering...';
+          
+          try {
+            await API.deliverProject(parseInt(projectId, 10), projectUrl, githubUrl);
+            await API.updateProjectStatus(parseInt(projectId, 10), 'completed', 100);
             
-            // Sync with user project
-            const userProject = JSON.parse(localStorage.getItem('eiximara_project') || '{}');
-            userProject.projectUrl = projectUrl;
-            userProject.githubUrl = githubUrl;
-            userProject.status = 'completed';
-            userProject.progress = 100;
+            // Send delivery message
+            await API.sendMessage(parseInt(projectId, 10), 
+              'Great news! Your project is complete and has been delivered. You can now access your live website and GitHub repository from the Payment section.');
             
-            // Add delivery message
-            if (!userProject.messages) userProject.messages = [];
-            userProject.messages.push({
-              id: Date.now(),
-              from: 'EIXIMARA Team',
-              avatar: 'E',
-              content: 'Great news! Your project is complete and has been delivered. You can now access your live website and GitHub repository from the Payment section.',
-              timestamp: new Date().toISOString(),
-              read: false
-            });
-            
-            localStorage.setItem('eiximara_project', JSON.stringify(userProject));
-            
-            // Reset form and update UI
+            await loadData();
             deliveryForm.reset();
-            updateProjectsList();
-            
-            alert('Project delivered successfully! The user can now access their website and GitHub repository.');
+            alert('Project delivered successfully!');
+          } catch (error) {
+            alert('Error delivering project: ' + error.message);
           }
+          
+          btn.disabled = false;
+          btn.innerHTML = '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg> Deliver Project';
         });
       }
       
-      // Transfer repo button (manual trigger)
+      // Transfer repo button
       if (transferRepoBtn) {
-        transferRepoBtn.addEventListener('click', function() {
+        transferRepoBtn.addEventListener('click', async function() {
           const projectId = document.getElementById('delivery-project').value;
-          const githubUrl = document.getElementById('github-url').value;
           
-          if (!projectId || !githubUrl) {
-            alert('Please select a project and enter the GitHub URL first');
+          if (!projectId) {
+            alert('Please select a project first');
             return;
           }
           
-          // Show transfer status
-          document.getElementById('transfer-status').style.display = 'block';
+          this.disabled = true;
+          this.innerHTML = 'Transferring...';
           
-          alert('GitHub repository transfer initiated! In production, this would call the GitHub API to transfer ownership.');
+          try {
+            await API.transferGitHub(parseInt(projectId, 10));
+            document.getElementById('transfer-status').style.display = 'block';
+            alert('GitHub repository marked as transferred!');
+          } catch (error) {
+            alert('Error transferring repo: ' + error.message);
+          }
+          
+          this.disabled = false;
+          this.innerHTML = '<svg fill="currentColor" viewBox="0 0 24 24" width="20" height="20"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg> Transfer GitHub Repo';
+        });
+      }
+      
+      // Admin logout
+      const adminLogout = document.getElementById('admin-logout');
+      if (adminLogout) {
+        adminLogout.addEventListener('click', function() {
+          API.logout();
         });
       }
     });

@@ -379,64 +379,28 @@
     </main>
   </div>
 
-  <!-- Dashboard Script -->
+  <!-- Scripts -->
+  <script src="js/api.js"></script>
   <script src="main.js"></script>
   <script>
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', async function() {
       'use strict';
       
-      // Check authentication (Demo mode - always allow)
-      const user = JSON.parse(localStorage.getItem('eiximara_user') || '{}');
-      
-      // Demo mode: Create default user if not exists
-      if (!user.isAuthenticated) {
-        const demoUser = {
-          email: 'demo@example.com',
-          name: 'Demo User',
-          isAuthenticated: true,
-          hasBooking: true,
-          createdAt: new Date().toISOString()
-        };
-        localStorage.setItem('eiximara_user', JSON.stringify(demoUser));
-        Object.assign(user, demoUser);
+      // Check authentication
+      if (!API.isLoggedIn()) {
+        window.location.href = 'auth.html';
+        return;
       }
       
-      // Initialize project data (Demo)
-      let projectData = JSON.parse(localStorage.getItem('eiximara_project') || 'null');
-      if (!projectData) {
-        projectData = {
-          id: 'PROJ-' + Date.now(),
-          type: 'Portfolio Website',
-          budget: '$1,500',
-          timeline: 'Standard (2 weeks)',
-          status: 'in_progress',
-          progress: 50,
-          startDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-          paymentStatus: 'pending',
-          paymentUrl: null,
-          projectUrl: null,
-          githubUrl: null,
-          messages: [
-            {
-              id: 1,
-              from: 'EIXIMARA Team',
-              avatar: 'E',
-              content: 'Welcome! Your project has been confirmed. We will start working on your portfolio website immediately.',
-              timestamp: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-              read: true
-            },
-            {
-              id: 2,
-              from: 'EIXIMARA Team',
-              avatar: 'E',
-              content: 'Great news! The design phase is complete. We are now moving into development. Check the status section for updates.',
-              timestamp: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
-              read: false
-            }
-          ]
-        };
-        localStorage.setItem('eiximara_project', JSON.stringify(projectData));
+      // Redirect admin to admin panel
+      if (API.isAdmin()) {
+        window.location.href = 'admin.html';
+        return;
       }
+      
+      const user = API.getUser();
+      let projectData = null;
+      let messagesData = [];
       
       // DOM Elements
       const sidebar = document.querySelector('.dashboard__sidebar');
@@ -447,23 +411,74 @@
       const paymentForm = document.getElementById('payment-form');
       
       // Populate user info
-      document.getElementById('user-avatar').textContent = user.name ? user.name.charAt(0).toUpperCase() : 'U';
-      document.getElementById('user-name').textContent = user.name || 'User';
+      const userName = user.firstName + ' ' + user.lastName;
+      document.getElementById('user-avatar').textContent = user.firstName ? user.firstName.charAt(0).toUpperCase() : 'U';
+      document.getElementById('user-name').textContent = userName || 'User';
       document.getElementById('user-email').textContent = user.email || 'user@example.com';
-      document.getElementById('welcome-name').textContent = user.name ? user.name.split(' ')[0] : 'User';
+      document.getElementById('welcome-name').textContent = user.firstName || 'User';
       
-      // Populate project data
-      updateDashboard();
+      // Load data from API
+      await loadDashboardData();
+      
+      async function loadDashboardData() {
+        try {
+          // Get projects
+          const projects = await API.getProjects();
+          projectData = projects.length > 0 ? projects[0] : null;
+          
+          // Get messages if project exists
+          if (projectData) {
+            messagesData = await API.getProjectMessages(projectData.id);
+            const unreadData = await API.getUnreadCount();
+            updateUnreadBadge(unreadData.count);
+          }
+          
+          updateDashboard();
+        } catch (error) {
+          console.error('Error loading dashboard data:', error);
+          // Show no project state
+          showNoProjectState();
+        }
+      }
+      
+      function showNoProjectState() {
+        document.querySelector('.dashboard__section--active').innerHTML = 
+          '<div class="dashboard__section-header">' +
+            '<h1 class="dashboard__section-title font-display">Welcome, ' + (user.firstName || 'User') + '</h1>' +
+            '<p class="dashboard__section-subtitle">You don\'t have any active projects yet</p>' +
+          '</div>' +
+          '<div class="admin__empty">' +
+            '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="48" height="48">' +
+              '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>' +
+            '</svg>' +
+            '<p>Book a project to get started!</p>' +
+            '<a href="book.html" class="btn btn--primary hover-glow">Book a Project</a>' +
+          '</div>';
+      }
+      
+      function updateUnreadBadge(count) {
+        const messageCount = document.getElementById('message-count');
+        if (messageCount) {
+          messageCount.textContent = count;
+          messageCount.style.display = count > 0 ? 'flex' : 'none';
+        }
+      }
       
       function updateDashboard() {
+        if (!projectData) {
+          showNoProjectState();
+          return;
+        }
+        
         // Update progress ring
         const progressRing = document.getElementById('progress-ring');
         const progressValue = document.getElementById('progress-value');
         if (progressRing && progressValue) {
+          const progress = projectData.progress || 0;
           const circumference = 251.2;
-          const offset = circumference - (projectData.progress / 100) * circumference;
+          const offset = circumference - (progress / 100) * circumference;
           progressRing.style.strokeDashoffset = offset;
-          progressValue.textContent = projectData.progress + '%';
+          progressValue.textContent = progress + '%';
         }
         
         // Update status badge
@@ -475,7 +490,16 @@
             'review': 'Under Review',
             'completed': 'Completed'
           };
-          statusBadge.textContent = statusMap[projectData.status] || 'In Progress';
+          statusBadge.textContent = statusMap[projectData.status] || 'Pending';
+          
+          // Update badge class
+          const classMap = {
+            'pending': 'pending',
+            'in_progress': 'progress',
+            'review': 'progress',
+            'completed': 'success'
+          };
+          statusBadge.className = 'dashboard__card-badge dashboard__card-badge--' + (classMap[projectData.status] || 'pending');
         }
         
         // Update payment badge
@@ -491,58 +515,126 @@
           paymentBadge.className = 'dashboard__card-badge dashboard__card-badge--' + payment.class;
         }
         
+        // Update amounts
+        const totalAmount = document.getElementById('total-amount');
+        const paidAmount = document.getElementById('paid-amount');
+        const paymentTotal = document.getElementById('payment-total');
+        if (totalAmount) totalAmount.textContent = '$' + (projectData.paymentAmount || 0).toLocaleString();
+        if (paidAmount) paidAmount.textContent = projectData.paymentStatus === 'verified' ? '$' + (projectData.paymentAmount || 0).toLocaleString() : '$0';
+        if (paymentTotal) paymentTotal.textContent = '$' + (projectData.paymentAmount || 0).toLocaleString();
+        
         // Update project details
-        document.getElementById('project-type').textContent = projectData.type;
-        document.getElementById('project-timeline').textContent = projectData.timeline;
-        document.getElementById('project-budget').textContent = projectData.budget;
-        document.getElementById('start-date').textContent = new Date(projectData.startDate).toLocaleDateString('en-US', { 
+        const projectType = document.getElementById('project-type');
+        const projectTimeline = document.getElementById('project-timeline');
+        const projectBudget = document.getElementById('project-budget');
+        const startDate = document.getElementById('start-date');
+        
+        if (projectType) projectType.textContent = projectData.projectType || 'Not specified';
+        if (projectTimeline) projectTimeline.textContent = projectData.timeline || 'Standard';
+        if (projectBudget) projectBudget.textContent = projectData.budget || 'Not specified';
+        if (startDate) startDate.textContent = new Date(projectData.createdAt).toLocaleDateString('en-US', { 
           year: 'numeric', month: 'long', day: 'numeric' 
         });
+        
+        // Update booked date in timeline
+        const bookedDate = document.getElementById('booked-date');
+        if (bookedDate) {
+          bookedDate.textContent = new Date(projectData.createdAt).toLocaleDateString('en-US', { 
+            month: 'short', day: 'numeric', year: 'numeric' 
+          });
+        }
         
         // Update messages
         updateMessages();
         
         // Update payment section
         updatePaymentSection();
+        
+        // Update timeline status
+        updateTimeline();
+      }
+      
+      function updateTimeline() {
+        const developmentStep = document.getElementById('development-step');
+        const reviewStep = document.getElementById('review-step');
+        const paymentStep = document.getElementById('payment-step');
+        const deliveryStep = document.getElementById('delivery-step');
+        
+        // Reset all steps
+        [developmentStep, reviewStep, paymentStep, deliveryStep].forEach(function(step) {
+          if (step) {
+            step.classList.remove('dashboard__timeline-item--completed', 'dashboard__timeline-item--active');
+          }
+        });
+        
+        // Update based on status
+        if (projectData.status === 'in_progress') {
+          if (developmentStep) developmentStep.classList.add('dashboard__timeline-item--active');
+        } else if (projectData.status === 'review') {
+          if (developmentStep) developmentStep.classList.add('dashboard__timeline-item--completed');
+          if (reviewStep) reviewStep.classList.add('dashboard__timeline-item--active');
+        } else if (projectData.status === 'completed') {
+          if (developmentStep) developmentStep.classList.add('dashboard__timeline-item--completed');
+          if (reviewStep) reviewStep.classList.add('dashboard__timeline-item--completed');
+          
+          if (projectData.paymentStatus === 'verified') {
+            if (paymentStep) paymentStep.classList.add('dashboard__timeline-item--completed');
+            if (deliveryStep) {
+              deliveryStep.classList.add(projectData.projectUrl ? 'dashboard__timeline-item--completed' : 'dashboard__timeline-item--active');
+            }
+          } else if (projectData.paymentStatus === 'submitted') {
+            if (paymentStep) paymentStep.classList.add('dashboard__timeline-item--active');
+          } else {
+            if (paymentStep) paymentStep.classList.add('dashboard__timeline-item--active');
+          }
+        }
       }
       
       function updateMessages() {
         const messagesList = document.getElementById('messages-list');
         const messagesPreview = document.getElementById('messages-preview');
-        const messageCount = document.getElementById('message-count');
         
-        const unreadCount = projectData.messages.filter(m => !m.read).length;
-        messageCount.textContent = unreadCount;
-        messageCount.style.display = unreadCount > 0 ? 'flex' : 'none';
+        const unreadCount = messagesData.filter(function(m) { return !m.isRead && m.senderRole === 'admin'; }).length;
+        updateUnreadBadge(unreadCount);
         
         // Full messages list
         if (messagesList) {
-          messagesList.innerHTML = projectData.messages.map(function(msg) {
-            return '<div class="dashboard__message' + (msg.read ? '' : ' dashboard__message--unread') + '">' +
-              '<div class="dashboard__message-avatar">' + msg.avatar + '</div>' +
-              '<div class="dashboard__message-content">' +
-                '<div class="dashboard__message-header">' +
-                  '<span class="dashboard__message-from">' + msg.from + '</span>' +
-                  '<span class="dashboard__message-time font-mono">' + formatTime(msg.timestamp) + '</span>' +
+          if (messagesData.length === 0) {
+            messagesList.innerHTML = '<div class="admin__empty"><p>No messages yet</p></div>';
+          } else {
+            messagesList.innerHTML = messagesData.map(function(msg) {
+              const isUnread = !msg.isRead && msg.senderRole === 'admin';
+              return '<div class="dashboard__message' + (isUnread ? ' dashboard__message--unread' : '') + '">' +
+                '<div class="dashboard__message-avatar">' + (msg.senderName ? msg.senderName.charAt(0).toUpperCase() : 'E') + '</div>' +
+                '<div class="dashboard__message-content">' +
+                  '<div class="dashboard__message-header">' +
+                    '<span class="dashboard__message-from">' + (msg.senderRole === 'admin' ? 'EIXIMARA Team' : msg.senderName) + '</span>' +
+                    '<span class="dashboard__message-time font-mono">' + formatTime(msg.createdAt) + '</span>' +
+                  '</div>' +
+                  '<p class="dashboard__message-text">' + msg.content + '</p>' +
                 '</div>' +
-                '<p class="dashboard__message-text">' + msg.content + '</p>' +
-              '</div>' +
-            '</div>';
-          }).join('');
+              '</div>';
+            }).join('');
+          }
         }
         
-        // Preview messages (latest 2)
+        // Preview messages (latest 2 from admin)
         if (messagesPreview) {
-          const previewMsgs = projectData.messages.slice(-2).reverse();
-          messagesPreview.innerHTML = previewMsgs.map(function(msg) {
-            return '<div class="dashboard__message-preview' + (msg.read ? '' : ' dashboard__message-preview--unread') + '">' +
-              '<div class="dashboard__message-preview-avatar">' + msg.avatar + '</div>' +
-              '<div class="dashboard__message-preview-content">' +
-                '<span class="dashboard__message-preview-from">' + msg.from + '</span>' +
-                '<p class="dashboard__message-preview-text">' + msg.content.substring(0, 60) + '...</p>' +
-              '</div>' +
-            '</div>';
-          }).join('');
+          const adminMsgs = messagesData.filter(function(m) { return m.senderRole === 'admin'; }).slice(-2).reverse();
+          if (adminMsgs.length === 0) {
+            messagesPreview.innerHTML = '<p style="color: var(--color-muted-foreground); font-size: 0.875rem;">No messages yet</p>';
+          } else {
+            messagesPreview.innerHTML = adminMsgs.map(function(msg) {
+              const isUnread = !msg.isRead;
+              return '<div class="dashboard__message-preview' + (isUnread ? ' dashboard__message-preview--unread' : '') + '">' +
+                '<div class="dashboard__message-preview-avatar">E</div>' +
+                '<div class="dashboard__message-preview-content">' +
+                  '<span class="dashboard__message-preview-from">EIXIMARA Team</span>' +
+                  '<p class="dashboard__message-preview-text">' + msg.content.substring(0, 60) + (msg.content.length > 60 ? '...' : '') + '</p>' +
+                '</div>' +
+              '</div>';
+            }).join('');
+          }
         }
       }
       
@@ -552,27 +644,31 @@
         const successSection = document.getElementById('payment-success');
         const deliveryDetails = document.getElementById('delivery-details');
         
+        if (!projectData) return;
+        
         if (projectData.paymentStatus === 'pending') {
-          qrSection.style.display = 'block';
-          confirmSection.style.display = 'block';
-          successSection.style.display = 'none';
+          if (qrSection) qrSection.style.display = 'block';
+          if (confirmSection) confirmSection.style.display = 'block';
+          if (successSection) successSection.style.display = 'none';
         } else if (projectData.paymentStatus === 'submitted') {
-          qrSection.style.display = 'none';
-          confirmSection.style.display = 'none';
-          successSection.style.display = 'block';
-          deliveryDetails.style.display = 'none';
+          if (qrSection) qrSection.style.display = 'none';
+          if (confirmSection) confirmSection.style.display = 'none';
+          if (successSection) successSection.style.display = 'block';
+          if (deliveryDetails) deliveryDetails.style.display = 'none';
         } else if (projectData.paymentStatus === 'verified') {
-          qrSection.style.display = 'none';
-          confirmSection.style.display = 'none';
-          successSection.style.display = 'block';
-          deliveryDetails.style.display = 'block';
+          if (qrSection) qrSection.style.display = 'none';
+          if (confirmSection) confirmSection.style.display = 'none';
+          if (successSection) successSection.style.display = 'block';
+          if (deliveryDetails) deliveryDetails.style.display = projectData.projectUrl ? 'block' : 'none';
           
           // Update delivery links
           if (projectData.projectUrl) {
-            document.getElementById('project-url-link').href = projectData.projectUrl;
+            const projectLink = document.getElementById('project-url-link');
+            if (projectLink) projectLink.href = projectData.projectUrl;
           }
-          if (projectData.githubUrl) {
-            document.getElementById('github-url-link').href = projectData.githubUrl;
+          if (projectData.githubRepo) {
+            const githubLink = document.getElementById('github-url-link');
+            if (githubLink) githubLink.href = projectData.githubRepo;
           }
         }
       }
@@ -597,7 +693,7 @@
       
       // Navigation
       navItems.forEach(function(item) {
-        item.addEventListener('click', function(e) {
+        item.addEventListener('click', async function(e) {
           e.preventDefault();
           const sectionId = this.dataset.section;
           
@@ -615,13 +711,14 @@
             }
           });
           
-          // Mark messages as read when viewing
-          if (sectionId === 'messages') {
-            projectData.messages.forEach(function(msg) {
-              msg.read = true;
-            });
-            localStorage.setItem('eiximara_project', JSON.stringify(projectData));
-            updateMessages();
+          // Refresh messages when viewing messages section
+          if (sectionId === 'messages' && projectData) {
+            try {
+              messagesData = await API.getProjectMessages(projectData.id);
+              updateMessages();
+            } catch (error) {
+              console.error('Error refreshing messages:', error);
+            }
           }
           
           // Close mobile sidebar
@@ -641,8 +738,13 @@
       
       // Payment form submission
       if (paymentForm) {
-        paymentForm.addEventListener('submit', function(e) {
+        paymentForm.addEventListener('submit', async function(e) {
           e.preventDefault();
+          
+          if (!projectData) {
+            alert('No active project found');
+            return;
+          }
           
           const paymentUrl = document.getElementById('payment-url').value;
           
@@ -651,22 +753,32 @@
             return;
           }
           
-          // Update project data
-          projectData.paymentStatus = 'submitted';
-          projectData.paymentUrl = paymentUrl;
-          localStorage.setItem('eiximara_project', JSON.stringify(projectData));
+          const btn = this.querySelector('button[type="submit"]');
+          btn.disabled = true;
+          btn.innerHTML = '<span style="opacity:0.7">Submitting...</span>';
           
-          // Update UI
-          updatePaymentSection();
-          updateDashboard();
+          try {
+            await API.submitPayment(projectData.id, paymentUrl);
+            
+            // Refresh project data
+            const projects = await API.getProjects();
+            projectData = projects.length > 0 ? projects[0] : null;
+            
+            // Update UI
+            updatePaymentSection();
+            updateDashboard();
+          } catch (error) {
+            alert('Error submitting payment: ' + error.message);
+            btn.disabled = false;
+            btn.innerHTML = '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> I have paid';
+          }
         });
       }
       
       // Logout
       if (logoutBtn) {
         logoutBtn.addEventListener('click', function() {
-          localStorage.removeItem('eiximara_user');
-          window.location.href = 'auth.html';
+          API.logout();
         });
       }
     });

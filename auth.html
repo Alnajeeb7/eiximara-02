@@ -174,11 +174,23 @@
     </footer>
   </div>
 
-  <!-- Auth Script -->
+  <!-- Scripts -->
+  <script src="js/api.js"></script>
   <script src="main.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', function() {
       'use strict';
+      
+      // Check if already logged in
+      if (API.isLoggedIn()) {
+        const user = API.getUser();
+        if (user.role === 'admin') {
+          window.location.href = 'admin.html';
+        } else {
+          window.location.href = 'dashboard.html';
+        }
+        return;
+      }
       
       // Elements
       const tabs = document.querySelectorAll('.auth__tab');
@@ -188,6 +200,22 @@
       const authSubtitle = document.getElementById('auth-subtitle');
       const passwordToggles = document.querySelectorAll('.auth__password-toggle');
       const googleSignin = document.getElementById('google-signin');
+      
+      // Helper: Show error message
+      function showError(message) {
+        alert(message);
+      }
+      
+      // Helper: Set loading state
+      function setLoading(form, loading) {
+        const btn = form.querySelector('button[type="submit"]');
+        const inputs = form.querySelectorAll('input');
+        btn.disabled = loading;
+        inputs.forEach(function(input) { input.disabled = loading; });
+        btn.innerHTML = loading 
+          ? '<span style="opacity:0.7">Please wait...</span>'
+          : (form.id === 'signin-form' ? 'Sign in' : 'Create account') + ' <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>';
+      }
       
       // Tab switching
       tabs.forEach(function(tab) {
@@ -231,79 +259,74 @@
         });
       });
       
-      // Sign In Form Submit (Demo Mode - bypass verification)
-      signinForm.addEventListener('submit', function(e) {
+      // Sign In Form Submit
+      signinForm.addEventListener('submit', async function(e) {
         e.preventDefault();
         
         const email = document.getElementById('signin-email').value;
         const password = document.getElementById('signin-password').value;
         
-        // Demo mode: Store user and redirect
-        const user = {
-          email: email,
-          name: email.split('@')[0],
-          isAuthenticated: true,
-          hasBooking: true, // Demo: bypass booking check
-          createdAt: new Date().toISOString()
-        };
+        setLoading(signinForm, true);
         
-        localStorage.setItem('eiximara_user', JSON.stringify(user));
-        
-        // Redirect to dashboard
-        window.location.href = 'dashboard.html';
+        try {
+          const result = await API.login(email, password);
+          
+          // Redirect based on role
+          if (result.user.role === 'admin') {
+            window.location.href = 'admin.html';
+          } else {
+            window.location.href = 'dashboard.html';
+          }
+        } catch (error) {
+          showError(error.message);
+          setLoading(signinForm, false);
+        }
       });
       
-      // Sign Up Form Submit (Demo Mode - bypass verification)
-      signupForm.addEventListener('submit', function(e) {
+      // Sign Up Form Submit
+      signupForm.addEventListener('submit', async function(e) {
         e.preventDefault();
         
-        const name = document.getElementById('signup-name').value;
+        const fullName = document.getElementById('signup-name').value;
         const email = document.getElementById('signup-email').value;
         const password = document.getElementById('signup-password').value;
         const confirm = document.getElementById('signup-confirm').value;
         
         // Basic validation
         if (password !== confirm) {
-          alert('Passwords do not match');
+          showError('Passwords do not match');
           return;
         }
         
         if (password.length < 8) {
-          alert('Password must be at least 8 characters');
+          showError('Password must be at least 8 characters');
           return;
         }
         
-        // Demo mode: Store user and redirect
-        const user = {
-          email: email,
-          name: name,
-          isAuthenticated: true,
-          hasBooking: true, // Demo: bypass booking check
-          createdAt: new Date().toISOString()
-        };
+        // Parse name
+        const nameParts = fullName.trim().split(' ');
+        const firstName = nameParts[0] || '';
+        const lastName = nameParts.slice(1).join(' ') || '';
         
-        localStorage.setItem('eiximara_user', JSON.stringify(user));
+        if (!firstName) {
+          showError('Please enter your full name');
+          return;
+        }
         
-        // Redirect to dashboard
-        window.location.href = 'dashboard.html';
+        setLoading(signupForm, true);
+        
+        try {
+          await API.register(email, password, firstName, lastName);
+          window.location.href = 'dashboard.html';
+        } catch (error) {
+          showError(error.message);
+          setLoading(signupForm, false);
+        }
       });
       
-      // Google Sign In (Demo Mode)
-      googleSignin.addEventListener('click', function() {
-        // Demo mode: Create mock Google user
-        const user = {
-          email: 'user@gmail.com',
-          name: 'Google User',
-          isAuthenticated: true,
-          hasBooking: true, // Demo: bypass booking check
-          provider: 'google',
-          createdAt: new Date().toISOString()
-        };
-        
-        localStorage.setItem('eiximara_user', JSON.stringify(user));
-        
-        // Redirect to dashboard
-        window.location.href = 'dashboard.html';
+      // Google Sign In (shows message about OAuth)
+      googleSignin.addEventListener('click', async function() {
+        showError('Google sign-in requires OAuth setup. Please use email/password to sign in, or contact support for Google authentication.');
       });
     });
   </script>
